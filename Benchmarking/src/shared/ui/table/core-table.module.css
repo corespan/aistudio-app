@@ -1,0 +1,47 @@
+.th {
+  font-weight: 500;
+}
+
+.td {
+  font-weight: 400;
+  text-align: left;
+  /* Top-align so a taller cell (e.g. a field with a validation error)
+     doesn't re-center its row siblings */
+  vertical-align: top;
+}
+
+.sortable {
+  cursor: pointer;
+}
+
+.clickableRow {
+  cursor: pointer;
+}
+
+.clickableRow:hover .td {
+  background-color: var(--mantine-color-default-hover);
+}
+
+.tableScroll[data-fullscreen] {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  background: var(--mantine-color-body);
+}
+
+.headerBox {
+  min-height: '3.5rem';
+  border-bottom: 1px solid var(--mantine-color-default-border);
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  gap: var(--mantine-spacing-sm);
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+}
