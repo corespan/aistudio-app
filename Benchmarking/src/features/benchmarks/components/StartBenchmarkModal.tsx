@@ -5,7 +5,6 @@ import {
   Alert,
   Box,
   Button,
-  CopyButton,
   Divider,
   Group,
   Loader,
@@ -17,12 +16,10 @@ import {
   ThemeIcon,
   Timeline,
   Title,
-  Tooltip,
 } from '@mantine/core'
 import {
   IconAlertCircle,
   IconCheck,
-  IconCopy,
   IconCpu,
   IconGauge,
   IconPlayerPlay,
@@ -37,7 +34,7 @@ import { useStartBenchmark } from '../data/queries/useStartBenchmark'
 import { extractConfigFields, mergeConfigValues } from '../data/selectors/extractConfigFields'
 import { readTaskId } from '../data/selectors/toTaskId'
 import { startBenchmarkSchema, type StartBenchmarkFormValues } from '../startBenchmark.schema'
-import { BenchmarkLogStream } from './BenchmarkLogStream'
+import { useRunStreamsStore } from '../store/useRunStreamsStore'
 import { ModelConfigFields } from './ModelConfigFields'
 
 type Props = {
@@ -65,11 +62,6 @@ const STEPS = [
     title: 'Review & Confirm',
     description: 'Please review your configuration before starting.',
     icon: IconGauge,
-  },
-  {
-    title: 'Benchmark Started',
-    description: 'Your benchmark is now running.',
-    icon: IconRocket,
   },
 ] as const
 
@@ -99,8 +91,10 @@ const ReviewRow = ({ label, value }: { label: string; value: string }) => (
 
 export const StartBenchmarkModal = ({ opened, onClose }: Props) => {
   const [active, setActive] = useState(0)
-  const [taskId, setTaskId] = useState<string | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
+
+  const startRun = useRunStreamsStore((s) => s.startRun)
+  const openDrawer = useRunStreamsStore((s) => s.openDrawer)
 
   const form = useForm<StartBenchmarkFormValues>({
     resolver: zodResolver(startBenchmarkSchema),
@@ -146,7 +140,6 @@ export const StartBenchmarkModal = ({ opened, onClose }: Props) => {
 
   const reset = () => {
     setActive(0)
-    setTaskId(null)
     setValidationError(null)
     form.reset(EMPTY_VALUES)
     startBenchmark.reset()
@@ -219,8 +212,15 @@ export const StartBenchmarkModal = ({ opened, onClose }: Props) => {
         },
         {
           onSuccess: (data) => {
-            setTaskId(readTaskId(data))
-            setActive(4)
+            const runId = readTaskId(data)
+            // Register the run in the shared store so its stream survives this
+            // modal closing and runs alongside any other in-progress runs, then
+            // hand the user straight to its live progress drawer.
+            if (runId) {
+              startRun({ taskId: runId, model: values.model, nodeIp: values.nodeIp })
+              openDrawer(runId)
+            }
+            handleClose()
           },
         },
       )
@@ -422,50 +422,6 @@ export const StartBenchmarkModal = ({ opened, onClose }: Props) => {
                         </Text>
                       )}
                     </Paper>
-                  </Stack>
-                )}
-
-                {active === 4 && (
-                  <Stack gap="md">
-                    {taskId && (
-                      <Paper withBorder radius="md" p="sm" shadow="xs">
-                        <Group justify="space-between" wrap="nowrap">
-                          <Stack gap={0}>
-                            <Text size="xs" c="dimmed">
-                              Run ID
-                            </Text>
-                            <Text size="sm" fw={700} ff="monospace">
-                              {taskId}
-                            </Text>
-                          </Stack>
-                          <CopyButton value={taskId}>
-                            {({ copied, copy }) => (
-                              <Tooltip label={copied ? 'Copied' : 'Copy'} withArrow>
-                                <ThemeIcon
-                                  variant="light"
-                                  color={copied ? 'teal' : 'gray'}
-                                  radius="md"
-                                  style={{ cursor: 'pointer' }}
-                                  onClick={copy}
-                                >
-                                  {copied ? (
-                                    <CoreIcon icon={<IconCheck />} size={16} />
-                                  ) : (
-                                    <CoreIcon icon={<IconCopy />} size={16} />
-                                  )}
-                                </ThemeIcon>
-                              </Tooltip>
-                            )}
-                          </CopyButton>
-                        </Group>
-                      </Paper>
-                    )}
-
-                    {taskId && (
-                      <Paper withBorder radius="md" p="lg" shadow="xs">
-                        <BenchmarkLogStream taskId={taskId} />
-                      </Paper>
-                    )}
                   </Stack>
                 )}
               </Stack>

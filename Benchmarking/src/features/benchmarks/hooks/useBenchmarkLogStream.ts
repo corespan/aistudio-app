@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
-export type LogStreamStatus = 'idle' | 'open' | 'error' | 'closed'
+export type LogStreamStatus = 'idle' | 'open' | 'reconnecting' | 'error' | 'closed'
 
 /**
  * Generic SSE log-stream hook. Pass the full API path (e.g.

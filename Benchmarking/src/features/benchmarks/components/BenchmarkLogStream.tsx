@@ -1,5 +1,5 @@
-import { Badge, Code, Group, ScrollArea, Stack, Text } from '@mantine/core'
-import { useLogStream, type LogStreamStatus } from '../hooks/useBenchmarkLogStream'
+import { useLogStream } from '../hooks/useBenchmarkLogStream'
+import { LogStreamView } from './LogStreamView'
 
 type Props = {
   /** Task id shown in the log header. */
@@ -13,39 +13,15 @@ type Props = {
   onLine?: (line: string) => void
 }
 
-const STATUS_COLOR: Record<LogStreamStatus, string> = {
-  idle: 'gray',
-  open: 'teal',
-  error: 'red',
-  closed: 'gray',
-}
-
-const STATUS_LABEL: Record<LogStreamStatus, string> = {
-  idle: 'Connecting…',
-  open: 'Streaming',
-  error: 'Disconnected',
-  closed: 'Ended',
-}
-
-/** Live log output streamed over SSE — reusable for any task type. */
+/**
+ * Self-contained live log stream: opens its own one-shot SSE connection and
+ * renders it. Used where a stream's lifetime matches the component's (e.g. the
+ * Jupyter launcher). For benchmark runs that must survive component unmounts and
+ * run concurrently, stream through `useRunStreamsStore` instead.
+ */
 export const BenchmarkLogStream = ({ taskId, streamPath, onLine }: Props) => {
   const path = streamPath ?? `/api/v1/benchmarks/${taskId}/logs/stream`
   const { lines, status } = useLogStream(path, onLine)
 
-  return (
-    <Stack gap="sm">
-      <Group justify="space-between">
-        <Text fw={600} size="sm">
-          Logs — {taskId}
-        </Text>
-        <Badge variant="light" color={STATUS_COLOR[status]} radius="sm">
-          {STATUS_LABEL[status]}
-        </Badge>
-      </Group>
-
-      <ScrollArea h={320} type="auto">
-        <Code block>{lines.length ? lines.join('\n') : 'Waiting for logs…'}</Code>
-      </ScrollArea>
-    </Stack>
-  )
+  return <LogStreamView taskId={taskId} lines={lines} status={status} />
 }

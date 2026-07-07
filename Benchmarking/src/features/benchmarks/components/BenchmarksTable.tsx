@@ -1,13 +1,18 @@
-import { Badge, Tooltip } from '@mantine/core'
-import { CoreTable, useCoreTable } from '@/shared/ui'
+import { useMemo } from 'react'
+import { Badge, Button, Tooltip } from '@mantine/core'
+import { IconActivity } from '@tabler/icons-react'
+import { CoreIcon, CoreTable, useCoreTable } from '@/shared/ui'
 import type { ColumnDef } from '@tanstack/react-table'
 import type { BenchmarkRun } from '../types'
 import { useBenchmarks } from '../data/queries/useBenchmarks'
+import { useRunStreamsStore } from '../store/useRunStreamsStore'
+import { toRunStreamRow } from '../data/selectors/toRunStreamRow'
 
 const STATUS_COLORS: Record<string, string> = {
   success: 'green',
   completed: 'green',
   running: 'blue',
+  'in progress': 'blue',
   fail: 'red',
   failed: 'red',
   pending: 'gray',
@@ -36,6 +41,24 @@ const byTimestamp: ColumnDef<BenchmarkRun>['sortingFn'] = (a, b, id) =>
 
 // Stable empty reference — a fresh `[]` each render livelocks TanStack Table's auto-reset.
 const EMPTY_ROWS: BenchmarkRun[] = []
+
+/**
+ * Opens the progress drawer for a run, starting its log stream if it isn't already
+ * streaming. Reads the store directly rather than being prop-drilled.
+ */
+const ViewProgressButton = ({ run }: { run: BenchmarkRun }) => {
+  const viewRun = useRunStreamsStore((s) => s.viewRun)
+  return (
+    <Button
+      size="compact-xs"
+      variant="light"
+      leftSection={<CoreIcon icon={<IconActivity stroke={1.8} />} size={14} />}
+      onClick={() => viewRun({ taskId: run.runId, model: run.model, nodeIp: run.machineIp })}
+    >
+      View Progress
+    </Button>
+  )
+}
 
 const columns: ColumnDef<BenchmarkRun>[] = [
   { accessorKey: 'runId', header: 'Run ID' },
@@ -90,13 +113,34 @@ const columns: ColumnDef<BenchmarkRun>[] = [
       )
     },
   },
+  {
+    id: 'actions',
+    header: '',
+    enableSorting: false,
+    enableGlobalFilter: false,
+    cell: ({ row }) => <ViewProgressButton run={row.original} />,
+  },
 ]
 
 export const BenchmarksTable = () => {
   const { data, isFetching } = useBenchmarks()
+  const streams = useRunStreamsStore((s) => s.streams)
+
+  // Show runs started this session immediately — even before `/api/v1/benchmarks`
+  // returns them. The API record is authoritative (it carries metrics and the real
+  // status), so when a run appears in both, the API row wins and the synthetic
+  // in-progress row is dropped.
+  const rows = useMemo(() => {
+    const apiRows = data ?? EMPTY_ROWS
+    const knownIds = new Set(apiRows.map((row) => row.runId))
+    const pendingRows = Object.values(streams)
+      .filter((stream) => !knownIds.has(stream.taskId))
+      .map(toRunStreamRow)
+    return pendingRows.length ? [...pendingRows, ...apiRows] : apiRows
+  }, [data, streams])
 
   const table = useCoreTable<BenchmarkRun>({
-    data: data ?? EMPTY_ROWS,
+    data: rows,
     columns,
     enablePagination: true,
     enableSorting: true,
