@@ -1,16 +1,7 @@
-import {
-  ActionIcon,
-  Badge,
-  Button,
-  Group,
-  Stack,
-  Text,
-  ThemeIcon,
-  Title,
-  Tooltip,
-} from '@mantine/core'
-import { IconGauge, IconPlayerPlay } from '@tabler/icons-react'
+import { Button, Group, Indicator, Stack, Text, ThemeIcon, Title } from '@mantine/core'
+import { IconGauge, IconLayoutSidebarRightExpand, IconPlayerPlay } from '@tabler/icons-react'
 import { CoreIcon } from '@/shared/ui'
+import { useRunStreamsStore } from '../store/useRunStreamsStore'
 
 type Props = {
   /** Whether the runs list is currently refetching. */
@@ -26,6 +17,9 @@ type Props = {
  * count, supporting copy, a refresh action, and the start-benchmark action.
  */
 export const BenchmarksHeader = ({ isStarting, onStartBenchmark }: Props) => {
+  const runCount = useRunStreamsStore((s) => Object.keys(s.streams).length)
+  const openPanel = useRunStreamsStore((s) => s.openPanel)
+
   return (
     <Group justify="space-between" align="flex-start" wrap="nowrap">
       <Group align="center" gap="md" wrap="nowrap">
@@ -51,6 +45,18 @@ export const BenchmarksHeader = ({ isStarting, onStartBenchmark }: Props) => {
       </Group>
 
       <Group gap="sm" wrap="nowrap">
+        <Indicator label={runCount} size={18} color="indigo" disabled={runCount === 0} offset={4}>
+          <Button
+            variant="default"
+            radius="md"
+            onClick={openPanel}
+            leftSection={
+              <CoreIcon icon={<IconLayoutSidebarRightExpand stroke={1.8} />} size={16} />
+            }
+          >
+            Runs
+          </Button>
+        </Indicator>
         {onStartBenchmark && (
           <Button
             bg="#3b5bdb"
