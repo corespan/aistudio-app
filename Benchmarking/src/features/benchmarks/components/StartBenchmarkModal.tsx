@@ -280,7 +280,7 @@ export const StartBenchmarkModal = ({ opened, onClose }: Props) => {
                     <Text
                       size="sm"
                       fw={index === active ? 700 : 500}
-                      c={index === active ? 'indigo' : undefined}
+                      c={index === active ? 'inherit' : undefined}
                     >
                       {step.title}
                     </Text>
@@ -317,7 +317,15 @@ export const StartBenchmarkModal = ({ opened, onClose }: Props) => {
                           ? 'Previously used machines appear as suggestions'
                           : 'Enter the IP address of your GPU machine'
                       }
-                      data={nodes.data?.map((opt) => (typeof opt === 'string' ? opt : opt.value)) ?? []}
+                      data={
+                        nodes.data?.flatMap((opt) => {
+                          if (typeof opt === 'string') return [opt]
+                          if ('value' in opt) return [opt.value]
+                          return opt.items.map((item) =>
+                            typeof item === 'string' ? item : item.value,
+                          )
+                        }) ?? []
+                      }
                       value={nodeIp}
                       onChange={(val) => form.setValue('nodeIp', val, { shouldValidate: true })}
                       onBlur={() => form.trigger('nodeIp')}

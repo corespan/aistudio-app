@@ -45,18 +45,7 @@ export const BenchmarksHeader = ({ isStarting, onStartBenchmark }: Props) => {
       </Group>
 
       <Group gap="sm" wrap="nowrap">
-        <Indicator label={runCount} size={18} color="indigo" disabled={runCount === 0} offset={4}>
-          <Button
-            variant="default"
-            radius="md"
-            onClick={openPanel}
-            leftSection={
-              <CoreIcon icon={<IconLayoutSidebarRightExpand stroke={1.8} />} size={16} />
-            }
-          >
-            Runs
-          </Button>
-        </Indicator>
+       
         {onStartBenchmark && (
           <Button
             bg="#3b5bdb"

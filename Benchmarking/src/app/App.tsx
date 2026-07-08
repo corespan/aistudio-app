@@ -14,7 +14,7 @@ const theme = createTheme(APP_THEME)
 const App = () => {
   return (
     <MantineProvider theme={theme} cssVariablesResolver={RESOLVER} defaultColorScheme="dark">
-      <Notifications mt={48} mr={-4} />
+      <Notifications position="top-right" mt={48} mr={-4} />
       <ModalsProvider>
         <QueryClientProvider client={queryClient}>
           <AppLayout />

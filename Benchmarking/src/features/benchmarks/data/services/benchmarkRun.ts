@@ -9,3 +9,7 @@ export type StartBenchmarkPayload = {
 // POST /api/v1/benchmarks/start (proxied to VITE_API_URL).
 export const startBenchmark = (payload: StartBenchmarkPayload) =>
   AiClient.post<unknown>('benchmarks/start', payload)
+
+// DELETE /api/v1/benchmarks/:runId — removes a single benchmark run.
+export const deleteBenchmark = (runId: string) =>
+  AiClient.delete<unknown>(`benchmarks/${encodeURIComponent(runId)}`)
