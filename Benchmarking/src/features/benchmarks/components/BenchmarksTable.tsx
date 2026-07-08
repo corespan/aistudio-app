@@ -1,10 +1,12 @@
 import { useMemo } from 'react'
-import { Badge, Button, Tooltip } from '@mantine/core'
-import { IconActivity } from '@tabler/icons-react'
+import { ActionIcon, Badge, Button, Group, Tooltip } from '@mantine/core'
+import { modals } from '@mantine/modals'
+import { IconActivity, IconTrash } from '@tabler/icons-react'
 import { CoreIcon, CoreTable, useCoreTable } from '@/shared/ui'
 import type { ColumnDef } from '@tanstack/react-table'
 import type { BenchmarkRun } from '../types'
 import { useBenchmarks } from '../data/queries/useBenchmarks'
+import { useDeleteBenchmark } from '../data/queries/useDeleteBenchmark'
 import { useRunStreamsStore } from '../store/useRunStreamsStore'
 import { toRunStreamRow } from '../data/selectors/toRunStreamRow'
 
@@ -57,6 +59,46 @@ const ViewProgressButton = ({ run }: { run: BenchmarkRun }) => {
     >
       View Progress
     </Button>
+  )
+}
+
+/**
+ * Deletes a single run after a confirmation prompt. Reads the mutation directly
+ * so the column definition stays free of prop drilling.
+ */
+const DeleteRunButton = ({ run }: { run: BenchmarkRun }) => {
+  const { mutate, isPending } = useDeleteBenchmark()
+  const closeRun = useRunStreamsStore((s) => s.closeRun)
+
+  const confirmDelete = () =>
+    modals.openConfirmModal({
+      title: 'Delete this run?',
+      children: (
+        <>
+          Run <strong>{run.runId}</strong>
+          {run.model ? ` (${run.model})` : ''} will be permanently deleted. This
+          cannot be undone.
+        </>
+      ),
+      labels: { confirm: 'Delete', cancel: 'Cancel' },
+      confirmProps: { color: 'red' },
+      // On success, also drop the run's live stream from the store so it can't
+      // reappear as a synthetic pending row (or linger in the progress drawer).
+      onConfirm: () => mutate(run.runId, { onSuccess: () => closeRun(run.runId) }),
+    })
+
+  return (
+    <Tooltip label="Delete run" withArrow>
+      <ActionIcon
+        color="red"
+        variant="subtle"
+        loading={isPending}
+        onClick={confirmDelete}
+        aria-label={`Delete run ${run.runId}`}
+      >
+        <CoreIcon icon={<IconTrash stroke={1.8} />} size={16} />
+      </ActionIcon>
+    </Tooltip>
   )
 }
 
@@ -118,7 +160,12 @@ const columns: ColumnDef<BenchmarkRun>[] = [
     header: '',
     enableSorting: false,
     enableGlobalFilter: false,
-    cell: ({ row }) => <ViewProgressButton run={row.original} />,
+    cell: ({ row }) => (
+      <Group gap="xs" wrap="nowrap" justify="flex-end">
+        <ViewProgressButton run={row.original} />
+        <DeleteRunButton run={row.original} />
+      </Group>
+    ),
   },
 ]
 
