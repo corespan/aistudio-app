@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { FormProvider, useForm, useWatch } from 'react-hook-form'
 import {
   Alert,
+  Autocomplete,
   Box,
   Button,
   Divider,
@@ -308,19 +309,20 @@ export const StartBenchmarkModal = ({ opened, onClose }: Props) => {
 
                 {active === 0 && (
                   <Paper withBorder radius="md" p="lg" shadow="xs">
-                    <CoreSelect
-                      name="nodeIp"
+                    <Autocomplete
                       label="Node IP"
-                      leftSection={<CoreIcon icon={<IconServer stroke={1.6} />} size={16} />}
-                      placeholder={
-                        nodes.isPending
-                          ? 'Loading…'
-                          : nodes.isError
-                            ? 'Failed to load machines'
-                            : 'Select Node IP'
+                      placeholder="Type or paste a machine IP (e.g. 10.6.12.22)"
+                      description={
+                        nodes.data && nodes.data.length > 0
+                          ? 'Previously used machines appear as suggestions'
+                          : 'Enter the IP address of your GPU machine'
                       }
-                      data={nodes.data ?? []}
-                      disabled={nodes.isPending || nodes.isError}
+                      data={nodes.data?.map((opt) => (typeof opt === 'string' ? opt : opt.value)) ?? []}
+                      value={nodeIp}
+                      onChange={(val) => form.setValue('nodeIp', val, { shouldValidate: true })}
+                      onBlur={() => form.trigger('nodeIp')}
+                      error={form.formState.errors.nodeIp?.message}
+                      leftSection={<CoreIcon icon={<IconServer stroke={1.6} />} size={16} />}
                       size="md"
                     />
                   </Paper>

@@ -48,7 +48,7 @@ export const ModelConfigFields = ({ config }: Props) => {
             name={`config.${key}`}
             control={control}
             render={({ field, fieldState }) => (
-              <TextInput {...field} label={key} error={fieldState.error?.message} />
+              <TextInput {...field} value={field.value ?? ''} label={key} error={fieldState.error?.message} />
             )}
           />
         ))}
