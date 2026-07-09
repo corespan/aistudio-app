@@ -106,20 +106,30 @@ export const useRunStreamsStore = create<RunStreamsStore>((set) => {
         }
       })
 
+    // The server sends `event: close` with data "READY" or "FAILED" when the
+    // workload reaches a terminal state. We close the EventSource here so it
+    // does not auto-reconnect (which would cause a perpetual RECONNECTING badge).
+    // The status is set to 'failed' vs 'closed' so the drawer badge shows the
+    // correct outcome without the user having to refresh the page.
+    source.addEventListener('close', (event: MessageEvent) => {
+      const isFailed = event.data === 'FAILED'
+      source.close()
+      sources.delete(taskId)
+      patch(taskId, { status: isFailed ? 'failed' : 'closed' })
+      void queryClient.invalidateQueries({ queryKey: BENCHMARKS_LIST_KEY })
+    })
+
     source.onerror = () => {
-      // CLOSED: the server ended the stream (run finished/failed). EventSource will
-      // NOT auto-reconnect, so tear down and refresh the table to pick up the run's
-      // final metrics and status from the API.
+      // CLOSED: stream was explicitly shut (either by the 'close' event handler
+      // above, or the server dropped the connection for good). Do not reconnect.
       if (source.readyState === EventSource.CLOSED) {
-        source.close()
         sources.delete(taskId)
         patch(taskId, { status: 'closed' })
         void queryClient.invalidateQueries({ queryKey: BENCHMARKS_LIST_KEY })
         return
       }
-      // CONNECTING: a transient drop. EventSource reconnects on its own and replays
-      // the Last-Event-ID header, so the server resumes from the latest delivered
-      // event instead of restarting. Buffered lines are intentionally preserved.
+      // CONNECTING: a transient network drop. EventSource reconnects on its own
+      // and sends the Last-Event-ID header so the server resumes without replay.
       patch(taskId, { status: 'reconnecting' })
     }
   }

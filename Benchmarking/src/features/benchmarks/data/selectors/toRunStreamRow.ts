@@ -1,11 +1,19 @@
 import type { BenchmarkRun } from '../../types'
 import type { RunStream } from '../../store/useRunStreamsStore'
 
+/** Map the SSE stream status to a human-readable table status. */
+const streamStatusToDisplay = (status: RunStream['status']): string => {
+  if (status === 'failed') return 'Failed'
+  if (status === 'closed') return 'Success'
+  return 'In Progress'
+}
+
 /**
  * Project a live run stream into a table row. Used only for runs not yet returned
- * by `/api/v1/benchmarks` (a just-started run), so metrics are unknown and the
- * status is always "In Progress" — once the API returns the real record, that row
- * takes over (see BenchmarksTable's merge).
+ * by `/api/v1/benchmarks` (a just-started run). Metrics are unknown until the API
+ * record appears; status reflects the live stream state so failed runs show "Failed"
+ * immediately rather than staying stuck on "In Progress".
+ * Once the API returns the real record (on success), that row takes over.
  */
 export const toRunStreamRow = (stream: RunStream): BenchmarkRun => ({
   runId: stream.taskId,
@@ -20,6 +28,6 @@ export const toRunStreamRow = (stream: RunStream): BenchmarkRun => ({
   tpot: null,
   e2el: null,
   memory: null,
-  status: 'In Progress',
+  status: streamStatusToDisplay(stream.status),
   timestamp: stream.startedAt,
 })

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
-export type LogStreamStatus = 'idle' | 'open' | 'reconnecting' | 'error' | 'closed'
+export type LogStreamStatus = 'idle' | 'open' | 'reconnecting' | 'error' | 'closed' | 'failed'
 
 /**
  * Generic SSE log-stream hook. Pass the full API path (e.g.
@@ -31,7 +31,16 @@ export const useLogStream = (path: string | null, onLine?: (line: string) => voi
       setLines((prev) => [...prev, event.data])
       onLineRef.current?.(event.data)
     }
+    // The server sends `event: close` with data "READY" or "FAILED" when the
+    // workload reaches a terminal state. Close the EventSource immediately so
+    // it does not auto-reconnect.
+    source.addEventListener('close', (event: MessageEvent) => {
+      source.close()
+      setStatus(event.data === 'FAILED' ? 'failed' : 'closed')
+    })
     source.onerror = () => {
+      // Only reached for actual network errors (readyState stays CONNECTING when
+      // the server drops the connection without an `event: close` handshake).
       setStatus(source.readyState === EventSource.CLOSED ? 'closed' : 'error')
       source.close()
     }
