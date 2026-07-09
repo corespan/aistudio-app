@@ -7,8 +7,9 @@ const STATUS_COLOR: Record<LogStreamStatus, string> = {
   idle: 'gray',
   open: 'teal',
   reconnecting: 'yellow',
-  error: 'red',
-  closed: 'gray',
+  error: 'orange',
+  closed: 'green',
+  failed: 'red',
 }
 
 // Most-recent run first, so the just-started run lands at the top of the switcher.

@@ -12,8 +12,9 @@ const STATUS_COLOR: Record<LogStreamStatus, string> = {
   idle: 'gray',
   open: 'teal',
   reconnecting: 'yellow',
-  error: 'red',
-  closed: 'gray',
+  error: 'orange',
+  closed: 'green',
+  failed: 'red',
 }
 
 const STATUS_LABEL: Record<LogStreamStatus, string> = {
@@ -21,7 +22,8 @@ const STATUS_LABEL: Record<LogStreamStatus, string> = {
   open: 'Streaming',
   reconnecting: 'Reconnecting…',
   error: 'Disconnected',
-  closed: 'Ended',
+  closed: 'Completed',
+  failed: 'Failed',
 }
 
 /**
