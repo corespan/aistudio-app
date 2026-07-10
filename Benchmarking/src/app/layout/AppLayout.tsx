@@ -84,7 +84,7 @@ export const AppLayout = () => {
                 <NavLink
                   key={section.key}
                   label={
-                    <Text size="sm" fw={isActive ? 600 : 500}>
+                    <Text size="sm" fw={isActive ? 700 : 500} c={isActive ? undefined : 'dimmed'}>
                       {section.label}
                     </Text>
                   }
@@ -92,15 +92,16 @@ export const AppLayout = () => {
                     <ThemeIcon
                       size={28}
                       radius="md"
-                      variant={isActive ? 'filled' : 'light'}
-                      color={isActive ? '#1b2864' : 'gray'}
+                      variant={isActive ? 'gradient' : 'light'}
+                      gradient={isActive ? BRAND_GRADIENT : undefined}
+                      color={isActive ? undefined : 'gray'}
                     >
                       <section.icon size={16} stroke={1.7} />
                     </ThemeIcon>
                   }
                   active={isActive}
                   variant="light"
-                  color="#1b2864"
+                  color="indigo"
                   onClick={() => setActive(section.key)}
                   h={44}
                   style={{ borderRadius: 'var(--mantine-radius-md)' }}
