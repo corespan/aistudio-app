@@ -129,24 +129,50 @@ export const BenchmarkMetricChart = () => {
     // point (the mean of all runs at that level). Without this, multiple runs at
     // the same concurrency — or a lone run at one level like 16 — make the line
     // zigzag or spike instead of reading as a clean left-to-right curve.
-    const byConcurrency = new Map<number, { sum: number; count: number }>()
+    // Collect every run's value at each concurrency. The point sits at the mean
+    // (so the trend line stays clean), but we keep the individual values so we can
+    // label and list them — otherwise runs with near-identical values overlap into
+    // one indistinguishable dot.
+    const byConcurrency = new Map<number, number[]>()
     for (const r of rows) {
       const value = r[metric]
       if (r.concurrency == null || value == null) continue
-      const bucket = byConcurrency.get(r.concurrency) ?? { sum: 0, count: 0 }
-      bucket.sum += value as number
-      bucket.count += 1
-      byConcurrency.set(r.concurrency, bucket)
+      const arr = byConcurrency.get(r.concurrency) ?? []
+      arr.push(value as number)
+      byConcurrency.set(r.concurrency, arr)
     }
+    const fmt = (v: number) => v.toLocaleString(undefined, { maximumFractionDigits: 2 })
     const points = [...byConcurrency.entries()]
-      .map(([concurrency, { sum, count }]) => [concurrency, sum / count])
-      .sort((a, b) => a[0] - b[0])
+      .map(([concurrency, vals]) => ({
+        value: [concurrency, vals.reduce((a, b) => a + b, 0) / vals.length],
+        runs: vals,
+      }))
+      .sort((a, b) => (a.value[0] as number) - (b.value[0] as number))
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const numericTooltip: any = {
+      ...tooltip,
+      formatter: (params: any) => {
+        const p = Array.isArray(params) ? params[0] : params
+        const x = (p.value as [number, number])[0]
+        const runs: number[] = p.data?.runs ?? []
+        const list =
+          runs.length > 1
+            ? runs.map((v) => `<br/>&nbsp;&nbsp;• <b>${fmt(v)}</b>`).join('')
+            : `: <b>${fmt(runs[0] ?? 0)}</b>`
+        const header =
+          runs.length > 1
+            ? `${meta.label} — Concurrency ${x} (${runs.length} runs)`
+            : `${meta.label}<br/>Concurrency ${x}`
+        return `${header}${list}`
+      },
+    }
 
     return {
       backgroundColor: 'transparent',
       animationDuration: 800,
       animationEasing: 'cubicOut',
-      tooltip,
+      tooltip: numericTooltip,
       grid: { left: 64, right: 28, top: 28, bottom: 52 },
       xAxis,
       yAxis: { type: 'value', ...yAxisBase },
@@ -157,7 +183,10 @@ export const BenchmarkMetricChart = () => {
           data: points,
           smooth: true,
           symbol: 'circle',
-          symbolSize: 9,
+          // Enlarge points that aggregate more than one run so overlaps stand out;
+          // the individual values are shown in the tooltip on hover.
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          symbolSize: (_value: any, params: any) => ((params.data?.runs?.length ?? 1) > 1 ? 14 : 9),
           showSymbol: true,
           lineStyle: {
             width: 3.5,
