@@ -43,5 +43,5 @@
   padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
   gap: var(--mantine-spacing-sm);
   flex-wrap: nowrap;
-  justify-content: flex-end;
+  justify-content: space-between;
 }

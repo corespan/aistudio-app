@@ -200,5 +200,6 @@ export const BenchmarksTable = () => {
   withRowBorders
       verticalSpacing="xs"
       horizontalSpacing="xs"
+      enableFullscreen
    emptyState="No benchmark runs yet" />
 }
