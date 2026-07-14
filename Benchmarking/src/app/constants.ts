@@ -38,7 +38,7 @@ const APP_THEME = {
   primaryColor: 'indigo',
   scale: APP_SCALE,
   fontFamily:
-    '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji',
+    '-apple-system, BlinkMacSystemFont, Inter, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji',
   components: {
     Select: Select.extend({
       defaultProps: {
