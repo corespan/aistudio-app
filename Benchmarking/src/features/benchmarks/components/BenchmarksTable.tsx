@@ -196,5 +196,9 @@ export const BenchmarksTable = () => {
     initialState: { sorting: [{ id: 'timestamp', desc: true }] },
   })
 
-  return <CoreTable table={table} loading={isFetching} emptyState="No benchmark runs yet" />
+  return <CoreTable table={table} loading={isFetching}
+  withRowBorders
+      verticalSpacing="xs"
+      horizontalSpacing="xs"
+   emptyState="No benchmark runs yet" />
 }

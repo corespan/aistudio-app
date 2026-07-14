@@ -16,19 +16,23 @@ export type CoreTableOptions<TData extends RowData> = Omit<
   enablePagination?: boolean
   enableSorting?: boolean
   enableGlobalFilter?: boolean
+  enableColumnFilters?: boolean
 }
 
 export function useCoreTable<TData extends RowData>({
   enablePagination,
   enableSorting,
   enableGlobalFilter,
+  enableColumnFilters,
   ...options
 }: CoreTableOptions<TData>): Table<TData> {
   return useReactTable<TData>({
     getCoreRowModel: getCoreRowModel(),
     ...(enablePagination && { getPaginationRowModel: getPaginationRowModel() }),
     ...(enableSorting && { getSortedRowModel: getSortedRowModel() }),
-    ...(enableGlobalFilter && { getFilteredRowModel: getFilteredRowModel() }),
+    ...((enableGlobalFilter || enableColumnFilters) && {
+      getFilteredRowModel: getFilteredRowModel(),
+    }),
     ...options,
   })
 }
