@@ -1,43 +1,45 @@
-import { Card, Container, Stack } from '@mantine/core'
-import { useDisclosure } from '@mantine/hooks'
+import { Button, Card, Container, Group, ScrollArea, Stack } from '@mantine/core'
+import { IconPlus } from '@tabler/icons-react'
 import { ConfigureBenchmarkRun } from './components/ConfigureBenchmarkRun'
-import { BenchmarksTable } from './components/BenchmarksTable'  
+import { BenchmarksTable } from './components/BenchmarksTable'
 import { BenchmarkMetricChart } from './components/BenchmarkMetricChart'
-import { BenchmarksHeader } from './components/BenchmarksHeader'
 import { StartBenchmarkModal } from './components/StartBenchmarkModal'
 import { RunProgressDrawer } from './components/RunProgressDrawer'
-import { useBenchmarks } from './data/queries/useBenchmarks'
+import { useStartBenchmarkModalStore } from './store/useStartBenchmarkModalStore'
 
 export const Benchmarks = () => {
-  const { isFetching, refetch } = useBenchmarks()
-  const [startModalOpen, { open: openModal, close: closeModal }] = useDisclosure(false)
+  const startModalOpen = useStartBenchmarkModalStore((s) => s.isOpen)
+  const openModal = useStartBenchmarkModalStore((s) => s.open)
+  const closeModal = useStartBenchmarkModalStore((s) => s.close)
 
   return (
-    <Container fluid py="xl">
-      <Stack gap="lg">
-        <BenchmarksHeader
-          isRefreshing={isFetching}
-          onRefresh={refetch}
-          onStartBenchmark={openModal}
-        />
-
-        <Card withBorder radius="md" p="lg">
-          <Stack gap="md">
-            <ConfigureBenchmarkRun />
-          </Stack>
-        </Card>
-
-        <Card withBorder radius="md" p="lg">
-          <BenchmarkMetricChart />
-        </Card>
-
+    <ScrollArea h="100%" scrollbarSize={8}>
+      <Container fluid pt="sm" pb="xl">
         <Stack gap="md">
-          <BenchmarksTable />
+          <Group justify="flex-end">
+            <Button size="sm" leftSection={<IconPlus size={16} />} onClick={openModal}>
+              Start Benchmark
+            </Button>
+          </Group>
+
+          <Card withBorder radius="md" p="lg">
+            <Stack gap="md">
+              <ConfigureBenchmarkRun />
+            </Stack>
+          </Card>
+
+          <Card withBorder radius="md" p="lg">
+            <BenchmarkMetricChart />
+          </Card>
+
+          <Stack gap="md">
+            <BenchmarksTable />
+          </Stack>
         </Stack>
-      </Stack>
+      </Container>
 
       <StartBenchmarkModal opened={startModalOpen} onClose={closeModal} />
       <RunProgressDrawer />
-    </Container>
+    </ScrollArea>
   )
 }

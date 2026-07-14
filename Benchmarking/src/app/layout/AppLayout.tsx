@@ -1,20 +1,37 @@
 import {
+  ActionIcon,
   AppShell,
   Box,
-  Group,
+  Flex,
+  Image,
+  Menu,
   NavLink,
+  Portal,
   ScrollArea,
+  Space,
   Stack,
   Text,
-  ThemeIcon,
-  Title,
+  Tooltip,
+  useMantineColorScheme,
 } from '@mantine/core'
-import { IconBrandPython, IconChartBar, IconTrophy, type IconProps } from '@tabler/icons-react'
+import {
+  IconBrandPython,
+  IconChartBar,
+  IconChevronDown,
+  IconChevronLeft,
+  IconChevronRight,
+  IconLogout,
+  IconSettings,
+  IconUserCircle,
+  type IconProps,
+} from '@tabler/icons-react'
 import { useState, type ComponentType } from 'react'
+import { CoreIcon } from '@/shared/ui'
 import { Benchmarks } from '@/features/benchmarks/Benchmarks'
 import { LaunchJupyter } from '@/features/benchmarks/components/LaunchJupyter'
+import { HEADER_HEIGHT } from '@/app/constants'
 
-type SectionKey = 'leaderboard' | 'jupyter'
+type SectionKey = 'benchmarks' | 'jupyter'
 
 type Section = {
   key: SectionKey
@@ -22,105 +39,190 @@ type Section = {
   icon: ComponentType<IconProps>
 }
 
-const SECTIONS: Section[] = [
-  { key: 'leaderboard', label: 'Leaderboard', icon: IconTrophy },
-  { key: 'jupyter', label: 'Launch Jupyter', icon: IconBrandPython },
+type NavGroup = {
+  key: string
+  label: string
+  children: Section[]
+}
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    key: 'menu',
+    label: 'Menu',
+    children: [
+      { key: 'benchmarks', label: 'Benchmarks', icon: IconChartBar },
+      { key: 'jupyter', label: 'Launch Jupyter', icon: IconBrandPython },
+    ],
+  },
 ]
 
 const NAVBAR_WIDTH = 248
-const BRAND_GRADIENT = { from: 'indigo', to: 'violet', deg: 135 }
+const NAVBAR_COLLAPSED_WIDTH = 48
 
 export const AppLayout = () => {
-  // Leaderboard is the default landing section — it hosts the existing UI.
-  const [active, setActive] = useState<SectionKey>('leaderboard')
+  const { colorScheme } = useMantineColorScheme()
+  // Benchmarks is the default landing section — it hosts the existing UI.
+  const [active, setActive] = useState<SectionKey>('benchmarks')
+  const [isNavbarCollapsed, setIsNavbarCollapsed] = useState(false)
+  // Placeholder until benchmarks wires up auth; composer derives this from the token.
+  const username = 'User'
+
+  const handleNavBarClose = () => {
+    setIsNavbarCollapsed(!isNavbarCollapsed)
+  }
+
+  const pageTitle =
+    NAV_GROUPS.flatMap((group) => group.children).find((child) => child.key === active)?.label ?? ''
 
   const renderPanel = () => {
     switch (active) {
-      case 'leaderboard':
+      case 'benchmarks':
         return <Benchmarks />
       case 'jupyter':
         return <LaunchJupyter />
     }
   }
 
-  return (
-    <AppShell navbar={{ width: NAVBAR_WIDTH, breakpoint: 'sm' }} h="100vh">
-      <AppShell.Navbar p={0}>
-        <AppShell.Section
-          p="md"
-          style={{ borderBottom: '1px solid var(--app-shell-border-color)' }}
-        >
-          <Group gap="sm" wrap="nowrap">
-            <ThemeIcon size={40} radius="md" variant="gradient" gradient={BRAND_GRADIENT}>
-              <IconChartBar size={24} stroke={1.6} />
-            </ThemeIcon>
-            <Box>
-              <Title order={5} fw={700} lh={1.1}>
-                Benchmarks
-              </Title>
-              <Text size="xs" c="dimmed">
-                AI Studio
-              </Text>
-            </Box>
-          </Group>
-        </AppShell.Section>
-
-        <AppShell.Section grow component={ScrollArea} scrollbars="y" p="xs">
+  const renderMenuItems = (groups: NavGroup[]) => {
+    return groups.map((group, index) => {
+      const items = []
+      if (!isNavbarCollapsed) {
+        items.push(
           <Text
-            size="xs"
+            key={group.key}
             c="dimmed"
-            fw={600}
-            tt="uppercase"
+            ta="left"
             px="sm"
-            py="xs"
-            style={{ letterSpacing: 0.6 }}
+            size="xs"
+            fw={500}
+            pt={index === 0 ? 'sm' : 'lg'}
+            pb="xs"
           >
-            Menu
-          </Text>
-          <Stack gap={4}>
-            {SECTIONS.map((section) => {
-              const isActive = active === section.key
-              return (
-                <NavLink
-                  key={section.key}
-                  label={
-                    <Text size="sm" fw={isActive ? 700 : 500} c={isActive ? undefined : 'dimmed'}>
-                      {section.label}
-                    </Text>
-                  }
-                  leftSection={
-                    <ThemeIcon
-                      size={28}
-                      radius="md"
-                      variant={isActive ? 'gradient' : 'light'}
-                      gradient={isActive ? BRAND_GRADIENT : undefined}
-                      color={isActive ? undefined : 'gray'}
-                    >
-                      <section.icon size={16} stroke={1.7} />
-                    </ThemeIcon>
-                  }
-                  active={isActive}
-                  variant="light"
-                  color="indigo"
-                  onClick={() => setActive(section.key)}
-                  h={44}
-                  style={{ borderRadius: 'var(--mantine-radius-md)' }}
-                />
-              )
-            })}
+            {group.label.toUpperCase()}
+          </Text>,
+        )
+      } else {
+        items.push(<Space key={group.key} h="sm" />)
+      }
+      items.push(
+        ...group.children.map((child) => {
+          const isActive = active === child.key
+          return (
+            <Tooltip key={child.key} label={child.label} disabled={!isNavbarCollapsed}>
+              <NavLink
+                id={child.key}
+                label={!isNavbarCollapsed ? <Text size="sm">{child.label}</Text> : ''}
+                leftSection={<CoreIcon icon={<child.icon />} size={18} />}
+                childrenOffset={16}
+                active={isActive}
+                variant={colorScheme === 'light' ? 'filled' : 'light'}
+                onClick={() => setActive(child.key)}
+                h={38}
+                noWrap
+              />
+            </Tooltip>
+          )
+        }),
+      )
+      return items
+    })
+  }
+
+  return (
+    <>
+      <AppShell navbar={{ width: NAVBAR_WIDTH, breakpoint: 'sm' }} h="100vh">
+        <AppShell.Navbar
+          w={isNavbarCollapsed ? NAVBAR_COLLAPSED_WIDTH : NAVBAR_WIDTH}
+          h="100%"
+          style={{ transition: 'width 300ms ease' }}
+        >
+          <Stack justify="space-between" h="100%">
+            <Stack justify="space-between" flex={1}>
+              <Stack gap={0}>
+                <Flex
+                  h={HEADER_HEIGHT}
+                  pr={12}
+                  pos="relative"
+                  gap="xs"
+                  align="center"
+                  justify="space-between"
+                >
+                  <Flex align="center" justify="center" gap={12}>
+                    <Image
+                      src="/corespan.png"
+                      alt="Corespan Logo"
+                      fit="contain"
+                      w={28}
+                      h={36}
+                      ml={isNavbarCollapsed ? 8 : 10}
+                    />
+                    {!isNavbarCollapsed && (
+                      <Text fw={600} size="lg" pb={4}>
+                        Corespan
+                      </Text>
+                    )}
+                  </Flex>
+                </Flex>
+
+
+                <Box mt={8} component={ScrollArea} type="scroll" scrollbars="y">
+                  {renderMenuItems(NAV_GROUPS)}
+                </Box>
+              </Stack>
+             
+            </Stack>
           </Stack>
-        </AppShell.Section>
+        </AppShell.Navbar>
 
-        <AppShell.Section p="md" style={{ borderTop: '1px solid var(--app-shell-border-color)' }}>
-          <Text size="xs" c="dimmed">
-            &copy; {new Date().getFullYear()} Corespan Systems
-          </Text>
-        </AppShell.Section>
-      </AppShell.Navbar>
+        {/* Portaled out of the navbar so it escapes its stacking context (z 100)
+          and stays clickable above drawer backdrops (z 200). */}
+        <Portal>
+          <ActionIcon
+            variant="default"
+            aria-label="Toggle navigation"
+            size="sm"
+            radius="xl"
+            pos="fixed"
+            top={41}
+            left={(isNavbarCollapsed ? NAVBAR_COLLAPSED_WIDTH : NAVBAR_WIDTH) - 11}
+            visibleFrom="sm"
+            style={{ zIndex: 201, transition: 'left 300ms ease' }}
+            onClick={handleNavBarClose}
+          >
+            {!isNavbarCollapsed && <CoreIcon icon={<IconChevronLeft />} color="grey" />}
+            {isNavbarCollapsed && <CoreIcon icon={<IconChevronRight />} color="grey" />}
+          </ActionIcon>
+        </Portal>
 
-      <AppShell.Main h="100vh" bg="var(--core-surface-1)">
-        {renderPanel()}
-      </AppShell.Main>
-    </AppShell>
+        <AppShell.Main
+          pl={isNavbarCollapsed ? NAVBAR_COLLAPSED_WIDTH : NAVBAR_WIDTH}
+          h="100vh"
+          style={{ transition: 'padding 300ms ease' }}
+        >
+          <Flex
+            h={HEADER_HEIGHT}
+            px={16}
+            gap={16}
+            align="center"
+            justify="space-between"
+            style={{ borderBottom: '1px solid var(--app-shell-border-color)' }}
+          >
+            <Text fw={600} size="md" tt="uppercase">
+              {pageTitle}
+            </Text>
+
+           
+          </Flex>
+
+          <Box
+            h={`calc(100vh - ${HEADER_HEIGHT}px)`}
+            bg="var(--core-surface-1)"
+            style={{ overflow: 'hidden' }}
+          >
+            {renderPanel()}
+          </Box>
+        </AppShell.Main>
+      </AppShell>
+    </>
   )
 }

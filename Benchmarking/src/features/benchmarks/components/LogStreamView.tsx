@@ -42,7 +42,7 @@ export const LogStreamView = ({ taskId, lines, status }: Props) => (
       </Badge>
     </Group>
 
-    <ScrollArea h={320} type="auto">
+    <ScrollArea h={320}>
       <Code block>{lines.length ? lines.join('\n') : 'Waiting for logs…'}</Code>
     </ScrollArea>
   </Stack>

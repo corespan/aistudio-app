@@ -20,10 +20,10 @@ declare module '@tanstack/react-table' {
     valign?: 'top' | 'middle' | 'bottom'
   }
 }
-import { ChevronDown, ChevronUp, ChevronsUpDown, Maximize, Minimize } from 'lucide-react'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { ChevronDown, ChevronUp, ChevronsUpDown, FilterX, Maximize, Minimize } from 'lucide-react'
+import { useEffect, useState, type ReactNode } from 'react'
 import classes from './core-table.module.css'
-import { IconSearchOff, IconSearch } from '@tabler/icons-react'
+import { IconSearch } from '@tabler/icons-react'
 import { CoreIcon } from '../CoreIcon'
 export type CoreTableProps<TData extends RowData> = Omit<MantineTableProps, 'data' | 'children'> & {
   table: Table<TData>
@@ -52,7 +52,7 @@ function mergeFoundationClasses(
   }
 }
 
-export const CoreTable = <TData extends RowData>({
+export function CoreTable<TData extends RowData>({
   table,
   emptyState = 'No data',
   verticalSpacing = 'xs',
@@ -66,9 +66,10 @@ export const CoreTable = <TData extends RowData>({
   paperProps,
   onRowClick,
   ...rest
-}: CoreTableProps<TData>) => {
+}: CoreTableProps<TData>) {
   const [fullscreen, setFullscreen] = useState(false)
   const toggleFullscreen = () => setFullscreen((value) => !value)
+  const [searchValue, setSearchValue] = useState('')
 
   const rows = table.getRowModel().rows
   const visibleColumns = table.getVisibleLeafColumns()
@@ -78,6 +79,14 @@ export const CoreTable = <TData extends RowData>({
   const isSearchable = Boolean(table.options.getFilteredRowModel)
   const showToolbar = isSearchable || enableFullscreen || Boolean(toolbarRight)
   const skeletonRowCount = isPaginated ? table.getState().pagination.pageSize : 5
+  const hasActiveFilters =
+    Boolean(table.getState().globalFilter) || table.getState().columnFilters.length > 0
+
+  const clearAllFilters = () => {
+    setSearchValue('')
+    table.setGlobalFilter('')
+    table.setColumnFilters([])
+  }
   return (
     <Paper
       radius="sm"
@@ -88,18 +97,36 @@ export const CoreTable = <TData extends RowData>({
     >
       {showToolbar && (
         <Group className={classes.headerBox}>
-          {isSearchable && <GlobalSearch table={table} />}
-          {toolbarRight}
-          {enableFullscreen && (
-            <ActionIcon
-              variant="subtle"
-              color="gray"
-              aria-label={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-              onClick={toggleFullscreen}
-            >
-              {fullscreen ? <CoreIcon icon={<Minimize />} /> : <CoreIcon icon={<Maximize />} />}
-            </ActionIcon>
+          {isSearchable ? (
+            <GlobalSearch table={table} value={searchValue} onChange={setSearchValue} />
+          ) : (
+            <span />
           )}
+          <Group gap="xs" wrap="nowrap">
+            {toolbarRight}
+            {isSearchable && (
+              <ActionIcon
+                variant="subtle"
+                color={hasActiveFilters ? undefined : 'gray'}
+                c={hasActiveFilters ? undefined : 'dimmed'}
+                aria-label="Clear all filters"
+                disabled={!hasActiveFilters}
+                onClick={clearAllFilters}
+              >
+                <CoreIcon icon={<FilterX />} size={16} />
+              </ActionIcon>
+            )}
+            {enableFullscreen && (
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                aria-label={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                onClick={toggleFullscreen}
+              >
+                {fullscreen ? <CoreIcon icon={<Minimize />} /> : <CoreIcon icon={<Maximize />} />}
+              </ActionIcon>
+            )}
+          </Group>
         </Group>
       )}
 
@@ -206,56 +233,39 @@ export const CoreTable = <TData extends RowData>({
   )
 }
 
-const SortIndicator = ({ direction }: { direction: false | 'asc' | 'desc' }) => {
+function SortIndicator({ direction }: { direction: false | 'asc' | 'desc' }) {
   if (direction === 'asc') return <CoreIcon icon={<ChevronUp size={14} />} />
   if (direction === 'desc') return <CoreIcon icon={<ChevronDown size={14} />} />
 }
 
-const GlobalSearch = <TData extends RowData>({ table }: { table: Table<TData> }) => {
-  const [value, setValue] = useState('')
-  const [expanded, setExpanded] = useState(false)
+function GlobalSearch<TData extends RowData>({
+  table,
+  value,
+  onChange,
+}: {
+  table: Table<TData>
+  value: string
+  onChange: (value: string) => void
+}) {
   const [debounced] = useDebouncedValue(value, 250)
-  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     table.setGlobalFilter(debounced)
   }, [debounced, table])
 
-  const toggle = () => {
-    if (expanded) {
-      setValue('')
-      setExpanded(false)
-    } else {
-      setExpanded(true)
-      requestAnimationFrame(() => inputRef.current?.focus())
-    }
-  }
-
   return (
-    <Group gap="xs" wrap="nowrap">
-      {expanded && (
-        <TextInput
-          leftSection={<CoreIcon icon={<IconSearch />} />}
-          ref={inputRef}
-          size="xs"
-          placeholder="Search"
-          value={value}
-          onChange={(event) => setValue(event.currentTarget.value)}
-        />
-      )}
-      <ActionIcon
-        variant="subtle"
-        color="gray"
-        aria-label={expanded ? 'Hide search' : 'Show search'}
-        onClick={toggle}
-      >
-        {expanded ? <CoreIcon icon={<IconSearchOff />} /> : <CoreIcon icon={<IconSearch />} />}
-      </ActionIcon>
-    </Group>
+    <TextInput
+      leftSection={<CoreIcon icon={<IconSearch />} />}
+      size="xs"
+      w={360}
+      placeholder="Search"
+      value={value}
+      onChange={(event) => onChange(event.currentTarget.value)}
+    />
   )
 }
 
-const PaginationSkeleton = () => {
+function PaginationSkeleton() {
   return (
     <Group justify="center" gap="xl" px="sm" py="xs">
       <Group gap="xs">
@@ -267,13 +277,13 @@ const PaginationSkeleton = () => {
   )
 }
 
-const TablePagination = <TData extends RowData>({
+function TablePagination<TData extends RowData>({
   table,
   pageSizeOptions,
 }: {
   table: Table<TData>
   pageSizeOptions: number[]
-}) => {
+}) {
   const pageCount = table.getPageCount()
   const { pageIndex, pageSize } = table.getState().pagination
 

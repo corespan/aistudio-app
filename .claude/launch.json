@@ -5,7 +5,8 @@
       "name": "benchmarking-dev",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["-C", "Benchmarking", "dev", "--", "--no-open"],
-      "port": 5173
+      "port": 5173,
+      "autoPort": true
     }
   ]
 }

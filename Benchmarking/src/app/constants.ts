@@ -1,4 +1,4 @@
-import { Card, CSSVariablesResolver, Paper, Select } from '@mantine/core'
+import { Card, CSSVariablesResolver, Paper, ScrollArea, Select } from '@mantine/core'
 
 const RESOLVER: CSSVariablesResolver = (theme) => ({
   variables: {},
@@ -18,6 +18,16 @@ const RESOLVER: CSSVariablesResolver = (theme) => ({
 
 /** Global Mantine size scale — shrinks all rem-based sizes by this factor. */
 const APP_SCALE = 0.9
+
+/** App header height in Mantine size units (px before `APP_SCALE` is applied). */
+const HEADER_HEIGHT = 52
+
+/**
+ * Rendered header height in raw px. Mantine size props (e.g. the header `h`) are
+ * scaled by `APP_SCALE`, so drawers must offset their top by this scaled value to
+ * open exactly below the header — mirrors composer's `HEADER_OFFSET`.
+ */
+const HEADER_OFFSET = HEADER_HEIGHT * APP_SCALE
 
 /**
  * Shared app theme. Mirrors apps/composer so typography (font family, scale,
@@ -48,7 +58,13 @@ const APP_THEME = {
         withBorder: true,
       },
     }),
+    // Scrollbars appear only while actively scrolling, then fade out.
+    ScrollArea: ScrollArea.extend({
+      defaultProps: {
+        type: 'scroll',
+      },
+    }),
   },
 }
 
-export { APP_THEME, RESOLVER, APP_SCALE }
+export { APP_THEME, RESOLVER, APP_SCALE, HEADER_HEIGHT, HEADER_OFFSET }
