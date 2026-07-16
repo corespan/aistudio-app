@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { API_ORIGIN } from '@/shared/api/config'
 
 export type LogStreamStatus = 'idle' | 'open' | 'reconnecting' | 'error' | 'closed' | 'failed'
 
@@ -53,4 +54,4 @@ export const useLogStream = (path: string | null, onLine?: (line: string) => voi
 
 /** Convenience wrapper for benchmark task log streams. */
 export const useBenchmarkLogStream = (taskId: string | null) =>
-  useLogStream(taskId ? `/api/v1/benchmarks/${taskId}/logs/stream` : null)
+  useLogStream(taskId ? `${API_ORIGIN}/api/v1/benchmarks/${taskId}/logs/stream` : null)

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { queryClient } from '@/shared/api/queryClient'
+import { API_ORIGIN } from '@/shared/api/config'
 import { benchmarkOptionKeys } from '../data/keys'
 import type { LogStreamStatus } from '../hooks/useBenchmarkLogStream'
 
@@ -48,7 +49,7 @@ const byStartedDesc = (a: RunStream, b: RunStream) => b.startedAt.localeCompare(
 // finished run refreshes the table into its final API row.
 const BENCHMARKS_LIST_KEY = [...benchmarkOptionKeys.all, 'benchmarks'] as const
 
-const streamPath = (taskId: string) => `/api/v1/benchmarks/${taskId}/logs/stream`
+const streamPath = (taskId: string) => `${API_ORIGIN}/api/v1/benchmarks/${taskId}/logs/stream`
 
 // Live EventSource handles are kept OUTSIDE the store: they are non-serializable
 // and must not participate in React state or trigger re-renders.
