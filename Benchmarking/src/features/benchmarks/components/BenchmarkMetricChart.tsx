@@ -46,6 +46,17 @@ export const BenchmarkMetricChart = () => {
   const { colorScheme } = useMantineColorScheme()
   const isDark = colorScheme === 'dark'
 
+  // Whether the *selected* metric has anything plottable. Rows can exist while the
+  // chosen metric is null for all of them (e.g. TTFT when the workload didn't
+  // report it) — in that case we show an empty state instead of a blank chart.
+  const hasData = useMemo(() => {
+    const rows = data ?? []
+    const meta = METRICS.find((m) => m.key === metric)!
+    return meta.kind === 'category'
+      ? rows.some((r) => r.concurrency != null && r.precision)
+      : rows.some((r) => r.concurrency != null && r[metric] != null)
+  }, [data, metric])
+
   // Rebuild the ECharts option whenever the rows, metric, or theme change.
   // CoreChart's effect calls setOption on every new `option`, so this is the
   // single source that drives the redraw — no imperative chart calls needed.
@@ -230,10 +241,12 @@ export const BenchmarkMetricChart = () => {
       </Group>
       {/* CoreChart fills its parent (width/height 100%), so the height lives here. */}
       <Box h={340}>
-        {(data ?? []).length === 0 ? (
+        {!hasData ? (
           <Center h="100%">
             <Text c="dimmed" size="sm">
-              No Benchmark Runs Found
+              {(data ?? []).length === 0
+                ? 'No Benchmark Runs Found'
+                : `No ${METRICS.find((m) => m.key === metric)?.label ?? 'benchmark'} data to display`}
             </Text>
           </Center>
         ) : (

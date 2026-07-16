@@ -29,6 +29,7 @@ import { useState, type ComponentType } from 'react'
 import { CoreIcon } from '@/shared/ui'
 import { Benchmarks } from '@/features/benchmarks/Benchmarks'
 import { LaunchJupyter } from '@/features/benchmarks/components/LaunchJupyter'
+import { DbHealthIndicator } from '@/features/benchmarks/components/DbHealthIndicator'
 import { HEADER_HEIGHT } from '@/app/constants'
 
 type SectionKey = 'benchmarks' | 'jupyter'
@@ -211,7 +212,7 @@ export const AppLayout = () => {
               {pageTitle}
             </Text>
 
-           
+            <DbHealthIndicator />
           </Flex>
 
           <Box

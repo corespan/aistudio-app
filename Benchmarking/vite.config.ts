@@ -41,6 +41,13 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           secure: false,
         },
+        // The backend exposes its health probe at the root (`/health`), outside
+        // the `/api/v1` namespace, so it needs its own proxy entry.
+        '/health': {
+          target: apiTarget,
+          changeOrigin: true,
+          secure: false,
+        },
       },
     },
     resolve: {
