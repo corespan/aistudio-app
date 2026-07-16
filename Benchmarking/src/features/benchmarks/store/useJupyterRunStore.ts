@@ -11,6 +11,9 @@ export type JupyterRun = {
   nodeIp: string | null
   /** Notebook URL parsed out of the log stream once the server reports ready. */
   url: string | null
+  /** True once the user has opened the notebook via the button. Persisted here so
+   *  the button stays disabled after navigating away and back. */
+  opened: boolean
   lines: string[]
   status: LogStreamStatus
 }
@@ -19,14 +22,19 @@ type JupyterRunStore = {
   run: JupyterRun | null
   /** Begin streaming a launch's logs. Idempotent for the same task id. */
   startRun: (input: { taskId: string; nodeIp?: string | null }) => void
+  /** Mark that the notebook tab has been opened (disables the Open button). */
+  markOpened: () => void
   /** Tear down the stream and clear the run. */
   reset: () => void
 }
 
 // The notebook URL isn't in the launch response — it arrives later in the log
-// stream, e.g. "✓ Jupyter Lab running at: http://10.6.12.22:8899/lab".
+// stream on the definitive ready line, e.g.
+// "✓ Jupyter Lab running at: http://10.6.12.22:8899/lab". Match only that line
+// (not any stray "running at" log) so the URL — and the Open button — surface
+// exactly when Jupyter is actually ready.
 const extractUrlFromLog = (line: string): string | null => {
-  const match = line.match(/running at:?\s*(https?:\/\/\S+)/i)
+  const match = line.match(/jupyter\s*lab\s+running at:?\s*(https?:\/\/\S+)/i)
   return match ? match[1].replace(/[.,)]+$/, '') : null
 }
 
@@ -51,7 +59,7 @@ export const useJupyterRunStore = create<JupyterRunStore>((set, get) => {
       source?.close()
       source = null
 
-      set({ run: { taskId, nodeIp, url: null, lines: [], status: 'idle' } })
+      set({ run: { taskId, nodeIp, url: null, opened: false, lines: [], status: 'idle' } })
 
       const s = new EventSource(streamPath(taskId))
       source = s
@@ -90,6 +98,8 @@ export const useJupyterRunStore = create<JupyterRunStore>((set, get) => {
         patch({ status: 'reconnecting' })
       }
     },
+
+    markOpened: () => patch({ opened: true }),
 
     reset: () => {
       source?.close()

@@ -13,3 +13,8 @@ export const benchmarkOptionKeys = {
   outputTokens: () => [...benchmarkOptionKeys.all, 'output-tokens'] as const,
   inputTokens: () => [...benchmarkOptionKeys.all, 'input-tokens'] as const,
 }
+
+/** Query key for the backend/database health probe. */
+export const healthKeys = {
+  all: ['health'] as const,
+}

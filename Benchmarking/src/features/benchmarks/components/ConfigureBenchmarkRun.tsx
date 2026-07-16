@@ -129,24 +129,28 @@ export const ConfigureBenchmarkRun = () => {
     >
       <BenchmarkFilterSync />
       <Stack gap="sm">
-        <Group justify="flex-end">
+        <Text fw={600} size="sm">
+          Benchmark Filters
+        </Text>
+        {/* Node IP (left) and Reset (right) share one row. */}
+        <Group justify="space-between" align="flex-end" wrap="nowrap">
+          <Box flex={1} maw={320} px={0} pt={0} pb={4}>
+            <Group gap={4} mb={2}>
+              <CoreIcon icon={<IconServer />} size={13} />
+              <Text size="xs" fw={700} style={{ textTransform: 'uppercase', letterSpacing: 0.4 }}>
+                Node IP
+              </Text>
+            </Group>
+            <CoreSelect
+              name="machineIp"
+              data={nodes.data ?? []}
+              disabled={nodes.isPending}
+              placeholder={nodes.isPending ? 'Loading…' : 'Select Node IP'}
+              styles={{ input: { fontWeight: 700 } }}
+            />
+          </Box>
           <ResetFiltersButton />
         </Group>
-        <Box flex={1} maw={320} px={8} pt={0} pb={4}>
-          <Group gap={4} mb={2}>
-            <CoreIcon icon={<IconServer />} size={13} />
-            <Text size="xs" fw={700} style={{ textTransform: 'uppercase', letterSpacing: 0.4 }}>
-              Node IP
-            </Text>
-          </Group>
-          <CoreSelect
-            name="machineIp"
-            data={nodes.data ?? []}
-            disabled={nodes.isPending}
-            placeholder={nodes.isPending ? 'Loading…' : 'Select Node IP'}
-            styles={{ input: { fontWeight: 700 } }}
-          />
-        </Box>
         <Group align="flex-end" gap="md" grow wrap="nowrap">
           <CoreSelect
             name="model"

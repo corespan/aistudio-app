@@ -1,4 +1,3 @@
-import { useEffect, useRef } from 'react'
 import { Button, Card, Group, ScrollArea, Stack } from '@mantine/core'
 import { IconBrandPython } from '@tabler/icons-react'
 import { CoreForm, CoreTextInput, CoreIcon } from '@/shared/ui'
@@ -29,16 +28,14 @@ export const LaunchJupyter = () => {
   // The run lives in the store, so it survives navigating away from this panel.
   const run = useJupyterRunStore((s) => s.run)
   const startRun = useJupyterRunStore((s) => s.startRun)
+  const markOpened = useJupyterRunStore((s) => s.markOpened)
   const reset = useJupyterRunStore((s) => s.reset)
 
   const url = run?.url ?? null
-
-  // Track the URL we've already opened so we open the notebook tab exactly once.
-  const openedUrlRef = useRef<string | null>(null)
+  const opened = run?.opened ?? false
 
   const handleSubmit = (data: LaunchJupyterForm) => {
     reset()
-    openedUrlRef.current = null
     launch.mutate(
       { node_ip: data.nodeIp },
       {
@@ -50,18 +47,16 @@ export const LaunchJupyter = () => {
     )
   }
 
-  // No tab is opened on Launch. Only once the notebook URL arrives in the log
-  // stream do we open it directly — once.
-  useEffect(() => {
-    if (!url || openedUrlRef.current === url) return
-    openedUrlRef.current = url
-    const opened = window.open(url, '_blank', 'noopener,noreferrer')
-    if (!opened) {
-      // Blocked by the popup blocker: window.open here isn't tied to a user
-      // gesture (the Launch click was seconds ago). Allow popups for this site.
-      console.warn(`[Jupyter] Browser blocked opening ${url}. Allow popups for this site.`)
-    }
-  }, [url])
+  // Opening the tab from an async callback gets popup-blocked (no user gesture).
+  // Instead we surface a button once the URL is known; clicking it IS a gesture,
+  // so window.open is allowed.
+  const openNotebook = () => {
+    if (!url) return
+    window.open(url, '_blank', 'noopener,noreferrer')
+    // Disable the button — we've navigated using it. Persisted in the store so it
+    // stays disabled after switching tabs and coming back.
+    markOpened()
+  }
 
   return (
     <ScrollArea h="100%" scrollbarSize={8}>
@@ -94,6 +89,19 @@ export const LaunchJupyter = () => {
             <LogStreamView taskId={run.taskId} lines={run.lines} status={run.status} />
           </Card>
         )}
+
+        {/* Bottom action: disabled until the notebook URL arrives in the stream,
+            then enabled; disabled again once opened. */}
+        <Group justify="flex-end">
+          <Button
+            size="sm"
+            onClick={openNotebook}
+            disabled={!url || opened}
+            leftSection={<CoreIcon icon={<IconBrandPython />} size={16} />}
+          >
+            {opened ? 'Jupyter Lab Opened' : 'Open Jupyter Lab'}
+          </Button>
+        </Group>
       </Stack>
     </ScrollArea>
   )
