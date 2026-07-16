@@ -1,3 +1,5 @@
+import { API_ORIGIN } from '@/shared/api/config'
+
 /**
  * Backend/database health probe.
  *
@@ -13,7 +15,7 @@ export type HealthStatus = {
 }
 
 export const getHealth = async (): Promise<HealthStatus> => {
-  const res = await fetch('/health', { headers: { Accept: 'application/json' } })
+  const res = await fetch(`${API_ORIGIN}/health`, { headers: { Accept: 'application/json' } })
   if (!res.ok) throw new Error(`Health check failed: ${res.status}`)
   return (await res.json()) as HealthStatus
 }

@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { API_ORIGIN } from '@/shared/api/config'
 import type { LogStreamStatus } from '../hooks/useBenchmarkLogStream'
 
 /**
@@ -38,7 +39,7 @@ const extractUrlFromLog = (line: string): string | null => {
   return match ? match[1].replace(/[.,)]+$/, '') : null
 }
 
-const streamPath = (taskId: string) => `/api/v1/jupyter/${taskId}/logs/stream`
+const streamPath = (taskId: string) => `${API_ORIGIN}/api/v1/jupyter/${taskId}/logs/stream`
 
 // Live EventSource is kept OUTSIDE the store: it is non-serializable and must not
 // participate in React state or trigger re-renders.
