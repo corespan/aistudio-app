@@ -1,6 +1,7 @@
 import { Button, Card, Container, Group, ScrollArea, Stack } from '@mantine/core'
 import { IconPlus } from '@tabler/icons-react'
 import { ConfigureBenchmarkRun } from './components/ConfigureBenchmarkRun'
+import { BenchmarkKpiCards } from './components/BenchmarkKpiCards'
 import { BenchmarksTable } from './components/BenchmarksTable'
 import { BenchmarkMetricChart } from './components/BenchmarkMetricChart'
 import { StartBenchmarkModal } from './components/StartBenchmarkModal'
@@ -21,6 +22,8 @@ export const Benchmarks = () => {
               Start Benchmark
             </Button>
           </Group>
+
+          <BenchmarkKpiCards />
 
           <Card withBorder radius="md" p="lg">
             <Stack gap="md">

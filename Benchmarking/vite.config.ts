@@ -7,7 +7,7 @@ import { dirname, resolve } from 'path'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, command }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const apiTarget = env.VITE_API_URL
 
@@ -23,6 +23,10 @@ export default defineConfig(({ mode }) => {
   }
 
   return {
+    // Served under `/aistudio` in production (see vercel.json rewrites + the
+    // composer domain), so built asset URLs must be prefixed to resolve there
+    // and not collide with the parent site's root. Dev stays at `/`.
+    base: command === 'build' ? '/aistudio/' : '/',
     plugins: [
       react({
         babel: {
