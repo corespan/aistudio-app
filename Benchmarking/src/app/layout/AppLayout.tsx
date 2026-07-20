@@ -26,6 +26,7 @@ import {
   type IconProps,
 } from '@tabler/icons-react'
 import { useState, type ComponentType } from 'react'
+import { AppFooter } from '@/app/layout/AppFooter'
 import { CoreIcon } from '@/shared/ui'
 import { Benchmarks } from '@/features/benchmarks/Benchmarks'
 import { LaunchJupyter } from '@/features/benchmarks/components/LaunchJupyter'
@@ -198,7 +199,7 @@ export const AppLayout = () => {
         <AppShell.Main
           pl={isNavbarCollapsed ? NAVBAR_COLLAPSED_WIDTH : NAVBAR_WIDTH}
           h="100vh"
-          style={{ transition: 'padding 300ms ease' }}
+          style={{ transition: 'padding 300ms ease', display: 'flex', flexDirection: 'column' }}
         >
           <Flex
             h={HEADER_HEIGHT}
@@ -215,12 +216,11 @@ export const AppLayout = () => {
             <DbHealthIndicator />
           </Flex>
 
-          <Box
-            h={`calc(100vh - ${HEADER_HEIGHT}px)`}
-            bg="var(--core-surface-1)"
-            style={{ overflow: 'hidden' }}
-          >
-            {renderPanel()}
+          <Box flex={1} mih={0} bg="var(--core-surface-1)" style={{ overflowY: 'auto' }}>
+            <Flex direction="column" mih="100%">
+              <Box flex={1}>{renderPanel()}</Box>
+              <AppFooter />
+            </Flex>
           </Box>
         </AppShell.Main>
       </AppShell>
