@@ -1,6 +1,7 @@
-import { Button, Card, Group, ScrollArea, Stack } from '@mantine/core'
+import { Button, Card, Group, Stack } from '@mantine/core'
 import { IconBrandPython } from '@tabler/icons-react'
 import { CoreForm, CoreTextInput, CoreIcon } from '@/shared/ui'
+import { PageShell } from '@/app/layout/PageShell'
 import { z } from 'zod'
 import { useLaunchJupyter } from '../data/queries/useLaunchJupyter'
 import { useJupyterRunStore } from '../store/useJupyterRunStore'
@@ -59,7 +60,7 @@ export const LaunchJupyter = () => {
   }
 
   return (
-    <ScrollArea h="100%" scrollbarSize={8}>
+    <PageShell>
       <Stack p="lg" gap="lg">
         <Card withBorder radius="md" p="lg">
           <Stack gap="lg">
@@ -103,6 +104,6 @@ export const LaunchJupyter = () => {
           </Button>
         </Group>
       </Stack>
-    </ScrollArea>
+    </PageShell>
   )
 }
