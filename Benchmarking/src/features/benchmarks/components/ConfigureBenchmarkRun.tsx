@@ -133,9 +133,10 @@ export const ConfigureBenchmarkRun = () => {
         <Text fw={600} size="sm">
           Benchmark Filters
         </Text>
-        {/* Node IP (left) and Reset (right) share one row. */}
-        <Group justify="space-between" align="flex-end" wrap="nowrap">
-          <Box flex={1} maw={320} px={0} pt={0} pb={4}>
+        {/* Node IP (left) and Reset (right) share one row, top-aligned so
+          Reset sits level with the "Node IP" label rather than the select. */}
+        <Group justify="space-between" align="flex-start" wrap="nowrap">
+          <Box flex={1} maw={320} px={0} pt={0} pb={0}>
             <Group gap={4} mb={2}>
               <CoreIcon icon={<IconServer />} size={13} />
               <Text size="xs" fw={700} style={{ textTransform: 'uppercase', letterSpacing: 0.4 }}>

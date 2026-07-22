@@ -41,7 +41,7 @@ export const Benchmarks = () => {
               withBorder
               radius="md"
               p="lg"
-              style={{ flex: '1 1 auto', minHeight: 920, display: 'flex', flexDirection: 'column' }}
+              style={{ flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column' }}
             >
               <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
                 <Group justify="flex-end">

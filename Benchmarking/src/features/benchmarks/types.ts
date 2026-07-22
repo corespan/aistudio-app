@@ -20,6 +20,7 @@ export type BenchmarkRun = {
   model: string
   machineIp: string
   gpuType: string
+  gpuCount: number | null
   benchmarkType: string
   precision: string
   concurrency: number | null

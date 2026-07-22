@@ -20,6 +20,7 @@ export const toRunStreamRow = (stream: RunStream): BenchmarkRun => ({
   model: stream.model ?? '—',
   machineIp: stream.nodeIp ?? '',
   gpuType: '—',
+  gpuCount: null,
   benchmarkType: '—',
   precision: '—',
   concurrency: null,
