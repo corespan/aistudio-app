@@ -332,7 +332,7 @@ export const BenchmarkMetricChart = () => {
   }, [data, metric, isDark, hiddenGpus, showLabels])
 
   return (
-    <Box>
+    <Box h="100%" mih={860} style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       <Group justify="space-between" mb="sm">
         <Text fw={600}>Metric vs Concurrency</Text>
         <Text size="sm" c="dimmed">
@@ -340,9 +340,8 @@ export const BenchmarkMetricChart = () => {
         </Text>
       </Group>
 
-      <Flex gap="md" align="stretch" wrap="nowrap">
-        {/* CoreChart fills its parent (width/height 100%), so the height lives here. */}
-        <Box h={340} style={{ flex: '1 1 auto', minWidth: 0 }}>
+      <Flex gap="md" align="stretch" wrap="nowrap" style={{ flex: '1 1 auto', minHeight: 0 }}>
+        <Box style={{ flex: '1 1 auto', minWidth: 0, minHeight: 0 }}>
           {!hasData ? (
             <Center h="100%">
               <Text c="dimmed" size="sm">
@@ -356,52 +355,96 @@ export const BenchmarkMetricChart = () => {
           )}
         </Box>
 
-        {/* Series panel: searchable, toggleable GPU list + display controls —
-            mirrors an interactive-chart series legend, built with Mantine
-            components so it matches the rest of the app's styling. */}
         {gpuColorEntries.length > 0 && (
-          <Paper withBorder radius="md" p="sm" w={220} h={340} style={{ flex: '0 0 220px' }}>
-            <Stack gap="xs" h="100%">
+          <Paper
+            withBorder
+            radius="lg"
+            p="md"
+            w={280}
+            h="100%"
+            style={{ flex: '0 0 280px', minHeight: 0 }}
+            mih={860}
+          >
+            <Stack gap="sm" h="100%" style={{ minHeight: 0 }}>
+              <Box>
+                <Text fw={600} size="sm">
+                  GPU Series
+                </Text>
+                <Text size="xs" c="dimmed">
+                  Toggle hardware lines and search available GPUs.
+                </Text>
+              </Box>
+
               <TextInput
-                placeholder="Search…"
-                size="xs"
+                placeholder="Search GPU"
+                size="sm"
                 leftSection={<IconSearch size={13} />}
                 value={search}
                 onChange={(e) => setSearch(e.currentTarget.value)}
               />
 
-              <ScrollArea flex={1} scrollbarSize={5} type="scroll">
-                <Stack gap={2}>
-                  {visiblePanelEntries.map(({ gpu, color }) => {
-                    const isHidden = hiddenGpus.has(gpu)
-                    return (
-                      <UnstyledButton key={gpu} onClick={() => toggleGpu(gpu)} px={4} py={2}>
-                        <Group gap={8} wrap="nowrap">
-                          <Box
-                            w={9}
-                            h={9}
-                            bg={isHidden ? 'var(--mantine-color-gray-6)' : color}
-                            style={{ borderRadius: '50%', flexShrink: 0 }}
-                          />
-                          <Text
-                            size="xs"
-                            c={isHidden ? 'dimmed' : undefined}
-                            td={isHidden ? 'line-through' : undefined}
-                            style={{ whiteSpace: 'nowrap' }}
-                          >
-                            {gpu.toUpperCase()}
-                          </Text>
-                        </Group>
-                      </UnstyledButton>
-                    )
-                  })}
-                  {visiblePanelEntries.length === 0 && (
-                    <Text size="xs" c="dimmed" ta="center" py="md">
-                      No GPUs match "{search}"
-                    </Text>
-                  )}
-                </Stack>
-              </ScrollArea>
+              <Box
+                p={6}
+                style={{
+                  flex: '1 1 auto',
+                  minHeight: 0,
+                  borderRadius: 12,
+                  border: '1px solid var(--app-shell-border-color)',
+                  background: 'var(--core-surface-1)',
+                }}
+              >
+                <ScrollArea h="100%" scrollbarSize={5} type="scroll">
+                  <Stack gap={6}>
+                    {visiblePanelEntries.map(({ gpu, color }) => {
+                      const isHidden = hiddenGpus.has(gpu)
+                      return (
+                        <UnstyledButton
+                          key={gpu}
+                          onClick={() => toggleGpu(gpu)}
+                          px="sm"
+                          py={10}
+                          style={{
+                            display: 'block',
+                            width: '100%',
+                            borderRadius: 10,
+                            border: '1px solid var(--app-shell-border-color)',
+                            background: isHidden ? 'var(--mantine-color-body)' : 'var(--mantine-color-default)',
+                            opacity: isHidden ? 0.72 : 1,
+                          }}
+                        >
+                          <Group justify="space-between" gap="sm" wrap="nowrap">
+                            <Group gap="sm" wrap="nowrap">
+                              <Box
+                                w={10}
+                                h={10}
+                                bg={isHidden ? 'var(--mantine-color-gray-6)' : color}
+                                style={{ borderRadius: '50%', flexShrink: 0 }}
+                              />
+                              <Text
+                                size="sm"
+                                fw={500}
+                                c={isHidden ? 'dimmed' : undefined}
+                                td={isHidden ? 'line-through' : undefined}
+                                style={{ whiteSpace: 'nowrap' }}
+                              >
+                                {gpu}
+                              </Text>
+                            </Group>
+                            <Text size="xs" c={isHidden ? 'dimmed' : color}>
+                              {isHidden ? 'Hidden' : 'Visible'}
+                            </Text>
+                          </Group>
+                        </UnstyledButton>
+                      )
+                    })}
+                    {visiblePanelEntries.length === 0 && (
+                      <Text size="xs" c="dimmed" ta="center" py="md">
+                        No GPUs match "{search}"
+                      </Text>
+                    )}
+                  </Stack>
+                </ScrollArea>
+              </Box>
 
               <Divider />
 

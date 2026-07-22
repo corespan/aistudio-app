@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, Card, Container, Group, SegmentedControl, Stack } from '@mantine/core'
+import { Box, Button, Card, Container, Group, SegmentedControl, Stack } from '@mantine/core'
 import { IconChartLine, IconPlus, IconTable } from '@tabler/icons-react'
 import { ConfigureBenchmarkRun } from './components/ConfigureBenchmarkRun'
 import { BenchmarkKpiCards } from './components/BenchmarkKpiCards'
@@ -21,8 +21,8 @@ export const Benchmarks = () => {
   return (
     <>
       <PageShell>
-        <Container fluid pt="sm" px="sm" pb="xl">
-          <Stack gap="md">
+        <Container fluid pt="lg" px="lg" pb="xl" h="100%">
+          <Stack gap="md" h="100%" style={{ minHeight: 0 }}>
             <Group justify="flex-end">
               <Button size="sm" leftSection={<IconPlus size={16} />} onClick={openModal}>
                 Start Benchmark
@@ -37,8 +37,13 @@ export const Benchmarks = () => {
               </Stack>
             </Card>
 
-            <Card withBorder radius="md" p="lg">
-              <Stack gap="md">
+            <Card
+              withBorder
+              radius="md"
+              p="lg"
+              style={{ flex: '1 1 auto', minHeight: 920, display: 'flex', flexDirection: 'column' }}
+            >
+              <Stack gap="md" style={{ flex: 1, minHeight: 0 }}>
                 <Group justify="flex-end">
                   <SegmentedControl
                     size="xs"
@@ -67,7 +72,9 @@ export const Benchmarks = () => {
                   />
                 </Group>
 
-                {resultsView === 'chart' ? <BenchmarkMetricChart /> : <BenchmarksTable />}
+                <Box style={{ flex: 1, minHeight: 0 }}>
+                  {resultsView === 'chart' ? <BenchmarkMetricChart /> : <BenchmarksTable />}
+                </Box>
               </Stack>
             </Card>
           </Stack>
