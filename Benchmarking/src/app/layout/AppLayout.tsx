@@ -61,8 +61,8 @@ const NAV_GROUPS: NavGroup[] = [
   },
 ]
 
-const NAVBAR_WIDTH = 296
-const NAVBAR_COLLAPSED_WIDTH = 56
+const NAVBAR_WIDTH = 248
+const NAVBAR_COLLAPSED_WIDTH = 48
 
 export const AppLayout = () => {
   const { colorScheme } = useMantineColorScheme()
@@ -139,11 +139,12 @@ export const AppLayout = () => {
     <>
       <AppShell
         navbar={{ width: NAVBAR_WIDTH, breakpoint: 'sm' }}
-        footer={{ height: { base: 64, sm: 64 } }}
+        footer={{ height: { base: 76, sm: 76 } }}
         h="100vh"
       >
         <AppShell.Navbar
           w={isNavbarCollapsed ? NAVBAR_COLLAPSED_WIDTH : NAVBAR_WIDTH}
+          h="calc(100vh - var(--app-shell-footer-height, 0px))"
           style={{ transition: 'width 300ms ease' }}
         >
           <Stack justify="space-between" h="100%">
@@ -175,7 +176,7 @@ export const AppLayout = () => {
                 </Flex>
 
 
-                <Box mt={8} style={{ overflowY: 'auto' }}>
+                <Box mt={8} flex={1} mih={0} style={{ overflowY: 'auto' }}>
                   {renderMenuItems(NAV_GROUPS)}
                 </Box>
               </Stack>
@@ -231,10 +232,7 @@ export const AppLayout = () => {
           </Box>
         </AppShell.Main>
 
-        <AppShell.Footer
-          pl={isNavbarCollapsed ? NAVBAR_COLLAPSED_WIDTH : NAVBAR_WIDTH}
-          style={{ transition: 'padding 300ms ease' }}
-        >
+        <AppShell.Footer>
           <AppFooter />
         </AppShell.Footer>
       </AppShell>

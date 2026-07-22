@@ -8,12 +8,17 @@ const toNum = (value: unknown): number | null => {
   return Number.isNaN(n) ? null : n
 }
 
+const firstDefined = (...values: unknown[]) => values.find((v) => v != null)
+
 /** Normalize a single raw benchmark record from the API into a BenchmarkRun. */
 export const normalizeBenchmarkRun = (item: Record<string, unknown>): BenchmarkRun => ({
   runId: String(item.run_id),
   model: String(item.model_name),
   machineIp: Array.isArray(item.node_ips) ? item.node_ips.join(', ') : '',
   gpuType: String(item.gpu_type),
+  gpuCount: toNum(
+    firstDefined(item.gpu_count, item.gpuCount, item.num_gpus, item.numGpus, item.gpu_num, item.gpuNum),
+  ),
   benchmarkType: String(item.precision),
   precision: String(item.precision),
   concurrency: toNum(item.concurrency),

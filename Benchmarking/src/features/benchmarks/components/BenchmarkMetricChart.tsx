@@ -60,6 +60,7 @@ const runTooltipHtml = (run: BenchmarkRun, accentColor: string) => `
   <div style="min-width:190px">
     <div style="font-weight:700;color:${accentColor};margin-bottom:4px">${run.model || '—'}</div>
     <div>GPU: <b>${normalizeGpuType(run.gpuType) ?? '—'}</b></div>
+    <div>GPU Count: <b>${run.gpuCount ?? '—'}</b></div>
     <div>Precision: <b>${run.precision || '—'}</b></div>
     <div>Concurrency: <b>${run.concurrency ?? '—'}</b></div>
     <div style="margin-top:6px">Throughput: <b>${fmtNum(run.throughput, ' tok/s')}</b></div>
@@ -332,7 +333,7 @@ export const BenchmarkMetricChart = () => {
   }, [data, metric, isDark, hiddenGpus, showLabels])
 
   return (
-    <Box h="100%" mih={860} style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+    <Box h="100%" style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       <Group justify="space-between" mb="sm">
         <Text fw={600}>Metric vs Concurrency</Text>
         <Text size="sm" c="dimmed">
@@ -363,7 +364,6 @@ export const BenchmarkMetricChart = () => {
             w={280}
             h="100%"
             style={{ flex: '0 0 280px', minHeight: 0 }}
-            mih={860}
           >
             <Stack gap="sm" h="100%" style={{ minHeight: 0 }}>
               <Box>
@@ -427,12 +427,10 @@ export const BenchmarkMetricChart = () => {
                                 td={isHidden ? 'line-through' : undefined}
                                 style={{ whiteSpace: 'nowrap' }}
                               >
-                                {gpu}
+                                {gpu.toUpperCase()}
                               </Text>
                             </Group>
-                            <Text size="xs" c={isHidden ? 'dimmed' : color}>
-                              {isHidden ? 'Hidden' : 'Visible'}
-                            </Text>
+                           
                           </Group>
                         </UnstyledButton>
                       )
