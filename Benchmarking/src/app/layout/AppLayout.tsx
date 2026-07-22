@@ -61,8 +61,8 @@ const NAV_GROUPS: NavGroup[] = [
   },
 ]
 
-const NAVBAR_WIDTH = 248
-const NAVBAR_COLLAPSED_WIDTH = 48
+const NAVBAR_WIDTH = 296
+const NAVBAR_COLLAPSED_WIDTH = 56
 
 export const AppLayout = () => {
   const { colorScheme } = useMantineColorScheme()
@@ -139,7 +139,7 @@ export const AppLayout = () => {
     <>
       <AppShell
         navbar={{ width: NAVBAR_WIDTH, breakpoint: 'sm' }}
-        footer={{ height: { base: 132, sm: 96 } }}
+        footer={{ height: { base: 64, sm: 64 } }}
         h="100vh"
       >
         <AppShell.Navbar
@@ -175,7 +175,7 @@ export const AppLayout = () => {
                 </Flex>
 
 
-                <Box mt={8} component={ScrollArea} type="scroll" scrollbars="y">
+                <Box mt={8} style={{ overflowY: 'auto' }}>
                   {renderMenuItems(NAV_GROUPS)}
                 </Box>
               </Stack>
@@ -224,12 +224,17 @@ export const AppLayout = () => {
             <DbHealthIndicator />
           </Flex>
 
-          <ScrollArea flex={1} mih={0} bg="var(--core-surface-1)" type="scroll" scrollbarSize={6}>
-            {renderPanel()}
-          </ScrollArea>
+          <Box flex={1} mih={0} bg="var(--core-surface-1)" style={{ overflow: 'hidden' }}>
+            <ScrollArea h="100%" type="scroll" scrollbarSize={6}>
+              {renderPanel()}
+            </ScrollArea>
+          </Box>
         </AppShell.Main>
 
-        <AppShell.Footer>
+        <AppShell.Footer
+          pl={isNavbarCollapsed ? NAVBAR_COLLAPSED_WIDTH : NAVBAR_WIDTH}
+          style={{ transition: 'padding 300ms ease' }}
+        >
           <AppFooter />
         </AppShell.Footer>
       </AppShell>
