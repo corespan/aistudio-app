@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
-import { Box, Button, Group, Stack, Text } from '@mantine/core'
+import { Box, Button, Group, Stack, Text, type ComboboxData } from '@mantine/core'
 import { IconRestore, IconServer } from '@tabler/icons-react'
 import { CoreForm, CoreIcon, CoreSelect } from '@/shared/ui'
 import { z } from 'zod'
@@ -15,6 +15,7 @@ import {
   useOutputTokens,
   usePrecisions,
 } from '../data/queries/useBenchmarkOptions'
+import { colorForGpuType, normalizeGpuType } from '../lib/gpuColors'
 
 const schema = z.object({
   model: z.string().min(1, 'Select a model'),
@@ -160,14 +161,7 @@ export const ConfigureBenchmarkRun = () => {
             placeholder={models.isPending ? 'Loading…' : 'Select model'}
             flex={1.2}
           />
-          <CoreSelect
-            name="gpuType"
-            label="GPU Type"
-            data={gpuTypes.data ?? []}
-            disabled={gpuTypes.isPending}
-            placeholder={gpuTypes.isPending ? 'Loading…' : 'Select GPU type'}
-            flex={1}
-          />
+          <GpuTypeSelect data={gpuTypes.data ?? []} disabled={gpuTypes.isPending} />
           <CoreSelect
             name="benchmarkType"
             label="Benchmark Type"
@@ -213,5 +207,38 @@ export const ConfigureBenchmarkRun = () => {
         </Group>
       </Stack>
     </CoreForm>
+  )
+}
+
+const GpuTypeSelect = ({ data, disabled }: { data: ComboboxData; disabled: boolean }) => {
+  const gpuTypeRaw = useWatch<BenchmarkRunConfig>({ name: 'gpuType' })
+  const gpuType = normalizeGpuType(gpuTypeRaw) ?? ''
+  const color = gpuType ? colorForGpuType(gpuType) : undefined
+
+  return (
+    <CoreSelect
+      name="gpuType"
+      label="GPU Type"
+      data={data}
+      disabled={disabled}
+      placeholder={disabled ? 'Loading…' : 'Select GPU type'}
+      flex={1}
+      leftSection={
+        color ? <Box w={10} h={10} bg={color} style={{ borderRadius: '50%' }} /> : undefined
+      }
+      leftSectionPointerEvents="none"
+      renderOption={({ option, checked }) => {
+        const value = normalizeGpuType(option.value) ?? option.value
+        const optionColor = value ? colorForGpuType(value) : undefined
+        return (
+          <Group gap="xs" wrap="nowrap">
+            <Box w={10} h={10} bg={optionColor} style={{ borderRadius: '50%', flexShrink: 0 }} />
+            <Text size="sm" fw={checked ? 700 : 500}>
+              {option.label}
+            </Text>
+          </Group>
+        )
+      }}
+    />
   )
 }

@@ -5,7 +5,7 @@ import { PlatformEvolutionTimeline } from './components/PlatformEvolutionTimelin
 
 export const AboutUs = () => (
   <PageShell>
-    <Container fluid p="xl">
+    <Container fluid pt="sm" px="sm" pb="xl">
       <Stack gap="xl">
         <AboutHero />
         <PlatformEvolutionTimeline />

@@ -41,7 +41,21 @@ export const useGpuTypes = () =>
   useQuery({
     queryKey: benchmarkOptionKeys.gpuTypes(),
     queryFn: getGpuTypes,
-    select: toNamedOptions,
+    select: (raw) => {
+      const options = toNamedOptions(raw)
+      return options
+        .map((o) => {
+          if (!o || typeof o !== 'object') return null
+          if (!('value' in o) || !('label' in o)) return null
+          const obj = o as unknown as Record<string, unknown>
+          const value = String(obj.value ?? '').trim()
+          const label = String(obj.label ?? '').trim()
+          if (!value || !label) return null
+          if (value.toLowerCase() === 'unknown' || label.toLowerCase() === 'unknown') return null
+          return { value, label }
+        })
+        .filter((o): o is { value: string; label: string } => o !== null)
+    },
     meta: {
       errorNotification: {
         id: 'benchmark-gpu-types-error',
