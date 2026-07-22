@@ -3,6 +3,7 @@ import * as echarts from 'echarts/core'
 import { LineChart } from 'echarts/charts'
 import { BarChart } from 'echarts/charts'
 import { PieChart } from 'echarts/charts'
+import { ScatterChart } from 'echarts/charts'
 import { PolarComponent } from 'echarts/components'
 import { GraphicComponent } from 'echarts/components'
 
@@ -19,6 +20,7 @@ echarts.use([
   LineChart,
   PieChart,
   BarChart,
+  ScatterChart,
   PolarComponent,
   GraphicComponent,
   GridComponent,

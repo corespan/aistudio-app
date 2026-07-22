@@ -1,0 +1,103 @@
+<svg viewBox="0 0 700 460" xmlns="http://www.w3.org/2000/svg" role="img">
+  <title>AI Studio isometric compute cluster illustration</title>
+  <desc>A central glowing cube containing the AI Studio mark, surrounded by six smaller cube nodes connected by glowing lines, representing a distributed GPU cluster.</desc>
+
+  <defs>
+    <radialGradient id="isoGlow" cx="50%" cy="50%" r="65%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.26"/>
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="cubeTop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#67e8f9"/>
+      <stop offset="100%" stop-color="#22d3ee"/>
+    </linearGradient>
+    <linearGradient id="cubeLeft" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0e7490"/>
+      <stop offset="100%" stop-color="#155e75"/>
+    </linearGradient>
+    <linearGradient id="cubeRight" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#164e63"/>
+      <stop offset="100%" stop-color="#0c3745"/>
+    </linearGradient>
+    <linearGradient id="coreTop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#a5f3fc"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </linearGradient>
+    <linearGradient id="coreLeft" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0369a1"/>
+      <stop offset="100%" stop-color="#075985"/>
+    </linearGradient>
+    <linearGradient id="coreRight" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0c4a6e"/>
+      <stop offset="100%" stop-color="#082f49"/>
+    </linearGradient>
+    <filter id="isoSoft" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect x="0" y="0" width="700" height="460" fill="url(#isoGlow)"/>
+
+  <!-- connector lines from core to each satellite cube (wide spread, near canvas edges) -->
+  <g fill="none" stroke="#38bdf8" stroke-opacity="0.4" stroke-width="2.5">
+    <path d="M350,230 L350,55"/>
+    <path d="M350,230 L588,140"/>
+    <path d="M350,230 L588,320"/>
+    <path d="M350,230 L350,405"/>
+    <path d="M350,230 L112,320"/>
+    <path d="M350,230 L112,140"/>
+  </g>
+  <g fill="#7dd3fc">
+    <circle r="4"><animateMotion dur="2.6s" repeatCount="indefinite" path="M350,230 L350,55"/></circle>
+    <circle r="4"><animateMotion dur="3.0s" repeatCount="indefinite" path="M350,230 L588,140"/></circle>
+    <circle r="4"><animateMotion dur="2.4s" repeatCount="indefinite" path="M350,230 L588,320"/></circle>
+    <circle r="4"><animateMotion dur="2.8s" repeatCount="indefinite" path="M350,230 L350,405"/></circle>
+    <circle r="4"><animateMotion dur="3.2s" repeatCount="indefinite" path="M350,230 L112,320"/></circle>
+    <circle r="4"><animateMotion dur="2.2s" repeatCount="indefinite" path="M350,230 L112,140"/></circle>
+  </g>
+
+  <!-- satellite cubes: bigger, pushed out near the canvas edges -->
+  <g transform="translate(350,55)">
+    <polygon points="0,-30 30,-12 0,6 -30,-12" fill="url(#cubeTop)"/>
+    <polygon points="-30,-12 0,6 0,36 -30,12" fill="url(#cubeLeft)"/>
+    <polygon points="30,-12 0,6 0,36 30,12" fill="url(#cubeRight)"/>
+  </g>
+  <g transform="translate(588,140)">
+    <polygon points="0,-30 30,-12 0,6 -30,-12" fill="url(#cubeTop)"/>
+    <polygon points="-30,-12 0,6 0,36 -30,12" fill="url(#cubeLeft)"/>
+    <polygon points="30,-12 0,6 0,36 30,12" fill="url(#cubeRight)"/>
+  </g>
+  <g transform="translate(588,320)">
+    <polygon points="0,-30 30,-12 0,6 -30,-12" fill="url(#cubeTop)"/>
+    <polygon points="-30,-12 0,6 0,36 -30,12" fill="url(#cubeLeft)"/>
+    <polygon points="30,-12 0,6 0,36 30,12" fill="url(#cubeRight)"/>
+  </g>
+  <g transform="translate(350,405)">
+    <polygon points="0,-30 30,-12 0,6 -30,-12" fill="url(#cubeTop)"/>
+    <polygon points="-30,-12 0,6 0,36 -30,12" fill="url(#cubeLeft)"/>
+    <polygon points="30,-12 0,6 0,36 30,12" fill="url(#cubeRight)"/>
+  </g>
+  <g transform="translate(112,320)">
+    <polygon points="0,-30 30,-12 0,6 -30,-12" fill="url(#cubeTop)"/>
+    <polygon points="-30,-12 0,6 0,36 -30,12" fill="url(#cubeLeft)"/>
+    <polygon points="30,-12 0,6 0,36 30,12" fill="url(#cubeRight)"/>
+  </g>
+  <g transform="translate(112,140)">
+    <polygon points="0,-30 30,-12 0,6 -30,-12" fill="url(#cubeTop)"/>
+    <polygon points="-30,-12 0,6 0,36 -30,12" fill="url(#cubeLeft)"/>
+    <polygon points="30,-12 0,6 0,36 30,12" fill="url(#cubeRight)"/>
+  </g>
+
+  <!-- central core cube (large), glowing, with the AI Studio mark on its top face -->
+  <circle cx="350" cy="230" r="100" fill="#38bdf8" fill-opacity="0.2" filter="url(#isoSoft)">
+    <animate attributeName="r" values="92;108;92" dur="3s" repeatCount="indefinite"/>
+  </circle>
+  <g transform="translate(350,230)" filter="url(#isoSoft)">
+    <polygon points="0,-68 68,-28 0,12 -68,-28" fill="url(#coreTop)"/>
+    <polygon points="-68,-28 0,12 0,80 -68,40" fill="url(#coreLeft)"/>
+    <polygon points="68,-28 0,12 0,80 68,40" fill="url(#coreRight)"/>
+    <!-- abstract arrow mark on the top face -->
+    <path d="M0,-50 L26,-22 L13,-22 L26,6 L-6,-22 L6,-22 Z" fill="#0b1220" transform="translate(-3,-6) scale(0.9)"/>
+  </g>
+</svg>

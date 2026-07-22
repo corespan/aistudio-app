@@ -1,66 +1,25 @@
-import { Anchor, Box, Button, Container, Divider, Group, Stack, Text, ThemeIcon } from '@mantine/core'
-import { IconBrandGithub, IconChartBar } from '@tabler/icons-react'
+import { Anchor, Box, Button, Container, Group, Stack, Text, ThemeIcon } from '@mantine/core'
+import { IconBrandGithub, IconChartBar, IconStar } from '@tabler/icons-react'
 
 const REPO_URL = 'https://github.com/corespan/aistudio-app'
 const BRAND_GRADIENT = { from: 'indigo', to: 'cyan', deg: 135 } as const
 
-type FooterLink = { label: string; href: string; external?: boolean }
-
-const LINK_COLUMNS: { title: string; links: FooterLink[] }[] = [
-  {
-    title: 'Product',
-    links: [
-      { label: 'Main Site', href: 'https://www.corespan.ai', external: true },
-      { label: 'Composer', href: 'https://www.corespancomposer.com', external: true },
-      { label: 'AI Studio', href: '/aistudio' },
-    ],
-  },
-  {
-    title: 'Benchmarks',
-    links: [
-      { label: 'Run a Benchmark', href: '/aistudio' },
-      { label: 'Performance per Dollar', href: '/aistudio' },
-      { label: 'GPU Reliability', href: '/aistudio' },
-    ],
-  },
-  {
-    title: 'Contribute',
-    links: [
-      { label: 'Source Code', href: REPO_URL, external: true },
-      { label: 'Report an Issue', href: `${REPO_URL}/issues`, external: true },
-    ],
-  },
-]
-
-const FooterAnchor = ({ label, href, external }: FooterLink) => (
-  <Anchor
-    href={href}
-    c="dimmed"
-    size="sm"
-    underline="hover"
-    {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-  >
-    {label}
-  </Anchor>
-)
-
 /**
- * Shared site footer rendered at the end of the page scroll (via PageShell), so
- * scrolling stays natural and the footer isn't a fixed bar. A single row: gradient
- * brand mark, link columns, and a GitHub CTA. Mantine components/props only.
+ * Shared site footer rendered as a fixed `AppShell.Footer` bar, pinned to the
+ * bottom of the viewport (does not scroll with page content). A single row:
+ * gradient brand mark and a GitHub CTA. Mantine components/props only.
  */
 export const AppFooter = () => (
-  <Box component="footer" bg="var(--core-surface-0)">
-    <Divider />
-    <Container fluid px="xl" py="lg">
-      <Group align="center" justify="space-between" wrap="wrap" gap="xl">
+  <Box component="footer" h="100%" bg="var(--core-surface-0)">
+    <Container fluid h="100%" px="xl">
+      <Group h="100%" align="center" justify="space-between" wrap="wrap" gap="xl">
         {/* Brand */}
         <Stack gap={6} maw={300}>
           <Group gap="sm" wrap="nowrap">
             <ThemeIcon size={38} radius="md" variant="gradient" gradient={BRAND_GRADIENT}>
               <IconChartBar size={22} stroke={1.9} />
             </ThemeIcon>
-            <Text fw={800} fz={22} variant="gradient" gradient={BRAND_GRADIENT}>
+            <Text fw={600} size="xl">
               AI Studio
             </Text>
           </Group>
@@ -69,36 +28,30 @@ export const AppFooter = () => (
           </Text>
         </Stack>
 
-        {/* Link columns */}
-        <Group align="flex-start" gap={56} wrap="wrap">
-          {LINK_COLUMNS.map((col) => (
-            <Stack key={col.title} gap={8}>
-              <Text size="sm" fw={700} tt="uppercase" c="dimmed">
-                {col.title}
-              </Text>
-              {col.links.map((link) => (
-                <FooterAnchor key={link.label} {...link} />
-              ))}
-            </Stack>
-          ))}
-        </Group>
-
-        {/* Call to action */}
-        <Stack gap="sm" maw={260}>
+        {/* GitHub call to action */}
+        <Stack gap={8} align="flex-end">
           <Button
             component="a"
             href={REPO_URL}
             target="_blank"
             rel="noopener noreferrer"
-            variant="gradient"
-            gradient={BRAND_GRADIENT}
-            leftSection={<IconBrandGithub size={16} />}
+            variant="default"
+            radius="md"
+            leftSection={<IconBrandGithub size={18} />}
+            rightSection={<IconStar size={15} />}
           >
             Star on GitHub
           </Button>
-          <Text size="xs" c="dimmed">
-            If this data helps your work, consider starring the repo or sharing it.
-          </Text>
+          <Anchor
+            href={REPO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            c="dimmed"
+            size="xs"
+            underline="hover"
+          >
+            corespan/aistudio-app
+          </Anchor>
         </Stack>
       </Group>
     </Container>
