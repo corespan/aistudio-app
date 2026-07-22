@@ -1,59 +1,62 @@
-import { Anchor, Box, Button, Container, Group, Stack, Text, ThemeIcon } from '@mantine/core'
+import { Box, Button, Container, Group, Paper, Text, ThemeIcon } from '@mantine/core'
 import { IconBrandGithub, IconChartBar, IconStar } from '@tabler/icons-react'
 
 const REPO_URL = 'https://github.com/corespan/aistudio-app'
-const BRAND_GRADIENT = { from: 'indigo', to: 'cyan', deg: 135 } as const
+// Height of the visible gap above the footer bar — matches the page's own
+// background so it reads as breathing room, not part of the footer itself.
+const TOP_GAP = 12
 
 /**
- * Shared site footer rendered as a fixed `AppShell.Footer` bar, pinned to the
- * bottom of the viewport (does not scroll with page content). A single row:
- * gradient brand mark and a GitHub CTA. Mantine components/props only.
+ * Shared site footer rendered as a fixed `AppShell.Footer` bar spanning the
+ * full screen width (including under the sidebar) — it does not scroll with
+ * the page content above it. A small page-colored gap sits above the bordered
+ * footer bar for visual separation from the content above. Kept deliberately
+ * plain: brand mark on the left, a simple "Star us on GitHub" callout on the
+ * right — no gradients, no extra chrome. Mantine props only.
  */
 export const AppFooter = () => (
-  <Box component="footer" h="100%" bg="var(--core-surface-0)">
-    <Container fluid h="100%" px="xl">
-      <Group h="100%" align="center" justify="space-between" wrap="wrap" gap="xl">
+  <Box h="100%" bg="var(--core-surface-1)">
+    <Box h={TOP_GAP} />
+    <Paper
+      component="footer"
+      w="100%"
+      h={`calc(100% - ${TOP_GAP}px)`}
+      radius={0}
+      withBorder
+      bg="var(--core-surface-0)"
+    >
+      <Container fluid h="100%" px="xl">
+      <Group h="100%" justify="space-between" align="center" wrap="wrap" gap="md">
         {/* Brand */}
-        <Stack gap={6} maw={300}>
-          <Group gap="sm" wrap="nowrap">
-            <ThemeIcon size={38} radius="md" variant="gradient" gradient={BRAND_GRADIENT}>
-              <IconChartBar size={22} stroke={1.9} />
-            </ThemeIcon>
-            <Text fw={600} size="xl">
-              AI Studio
-            </Text>
-          </Group>
-          <Text size="xs" c="dimmed">
-            Open, reproducible AI inference benchmarking with auditable, real-world data.
+        <Group gap="xs" wrap="nowrap">
+          <ThemeIcon size={28} radius="md" variant="light" color="indigo">
+            <IconChartBar size={16} stroke={1.9} />
+          </ThemeIcon>
+          <Text size="sm" c="dimmed">
+            © {new Date().getFullYear()} AI Studio
           </Text>
-        </Stack>
+        </Group>
 
-        {/* GitHub call to action */}
-        <Stack gap={8} align="flex-end">
+        {/* Star on GitHub */}
+        <Group gap="sm" wrap="nowrap">
+          <Text size="sm" c="dimmed" visibleFrom="sm">
+            Find this useful?
+          </Text>
           <Button
             component="a"
             href={REPO_URL}
             target="_blank"
             rel="noopener noreferrer"
             variant="default"
-            radius="md"
-            leftSection={<IconBrandGithub size={18} />}
-            rightSection={<IconStar size={15} />}
-          >
-            Star on GitHub
-          </Button>
-          <Anchor
-            href={REPO_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            c="dimmed"
             size="xs"
-            underline="hover"
+            leftSection={<IconBrandGithub size={15} />}
+            rightSection={<IconStar size={13} />}
           >
-            corespan/aistudio-app
-          </Anchor>
-        </Stack>
+            Star us on GitHub
+          </Button>
+        </Group>
       </Group>
-    </Container>
+      </Container>
+    </Paper>
   </Box>
 )

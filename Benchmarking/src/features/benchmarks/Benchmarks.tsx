@@ -1,5 +1,6 @@
-import { Button, Card, Container, Group, Stack } from '@mantine/core'
-import { IconPlus } from '@tabler/icons-react'
+import { useState } from 'react'
+import { Button, Card, Container, Group, SegmentedControl, Stack } from '@mantine/core'
+import { IconChartLine, IconPlus, IconTable } from '@tabler/icons-react'
 import { ConfigureBenchmarkRun } from './components/ConfigureBenchmarkRun'
 import { BenchmarkKpiCards } from './components/BenchmarkKpiCards'
 import { BenchmarksTable } from './components/BenchmarksTable'
@@ -9,10 +10,13 @@ import { RunProgressDrawer } from './components/RunProgressDrawer'
 import { PageShell } from '@/app/layout/PageShell'
 import { useStartBenchmarkModalStore } from './store/useStartBenchmarkModalStore'
 
+type ResultsView = 'chart' | 'table'
+
 export const Benchmarks = () => {
   const startModalOpen = useStartBenchmarkModalStore((s) => s.isOpen)
   const openModal = useStartBenchmarkModalStore((s) => s.open)
   const closeModal = useStartBenchmarkModalStore((s) => s.close)
+  const [resultsView, setResultsView] = useState<ResultsView>('chart')
 
   return (
     <>
@@ -34,12 +38,38 @@ export const Benchmarks = () => {
             </Card>
 
             <Card withBorder radius="md" p="lg">
-              <BenchmarkMetricChart />
-            </Card>
+              <Stack gap="md">
+                <Group justify="flex-end">
+                  <SegmentedControl
+                    size="xs"
+                    value={resultsView}
+                    onChange={(value) => setResultsView(value as ResultsView)}
+                    data={[
+                      {
+                        value: 'chart',
+                        label: (
+                          <Group gap={6} wrap="nowrap">
+                            <IconChartLine size={14} />
+                            Chart
+                          </Group>
+                        ),
+                      },
+                      {
+                        value: 'table',
+                        label: (
+                          <Group gap={6} wrap="nowrap">
+                            <IconTable size={14} />
+                            Table
+                          </Group>
+                        ),
+                      },
+                    ]}
+                  />
+                </Group>
 
-            <Stack gap="md">
-              <BenchmarksTable />
-            </Stack>
+                {resultsView === 'chart' ? <BenchmarkMetricChart /> : <BenchmarksTable />}
+              </Stack>
+            </Card>
           </Stack>
         </Container>
       </PageShell>

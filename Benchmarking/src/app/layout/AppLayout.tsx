@@ -139,7 +139,7 @@ export const AppLayout = () => {
     <>
       <AppShell
         navbar={{ width: NAVBAR_WIDTH, breakpoint: 'sm' }}
-        footer={{ height: { base: 140, sm: 96 } }}
+        footer={{ height: { base: 132, sm: 96 } }}
         h="100vh"
       >
         <AppShell.Navbar
