@@ -17,7 +17,7 @@ export const Benchmarks = () => {
   return (
     <>
       <PageShell>
-        <Container fluid pt="sm" pb="xl">
+        <Container fluid pt="sm" px="sm" pb="xl">
           <Stack gap="md">
             <Group justify="flex-end">
               <Button size="sm" leftSection={<IconPlus size={16} />} onClick={openModal}>

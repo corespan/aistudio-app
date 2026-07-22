@@ -20,6 +20,7 @@ import {
   IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
+  IconInfoCircle,
   IconLogout,
   IconSettings,
   IconUserCircle,
@@ -31,9 +32,10 @@ import { CoreIcon } from '@/shared/ui'
 import { Benchmarks } from '@/features/benchmarks/Benchmarks'
 import { LaunchJupyter } from '@/features/benchmarks/components/LaunchJupyter'
 import { DbHealthIndicator } from '@/features/benchmarks/components/DbHealthIndicator'
+import { AboutUs } from '@/features/about/AboutUs'
 import { HEADER_HEIGHT } from '@/app/constants'
 
-type SectionKey = 'benchmarks' | 'jupyter'
+type SectionKey = 'benchmarks' | 'jupyter' | 'about'
 
 type Section = {
   key: SectionKey
@@ -54,6 +56,7 @@ const NAV_GROUPS: NavGroup[] = [
     children: [
       { key: 'benchmarks', label: 'Benchmarks', icon: IconChartBar },
       { key: 'jupyter', label: 'Launch Jupyter', icon: IconBrandPython },
+      { key: 'about', label: 'About Us', icon: IconInfoCircle },
     ],
   },
 ]
@@ -82,6 +85,8 @@ export const AppLayout = () => {
         return <Benchmarks />
       case 'jupyter':
         return <LaunchJupyter />
+      case 'about':
+        return <AboutUs />
     }
   }
 
@@ -132,10 +137,13 @@ export const AppLayout = () => {
 
   return (
     <>
-      <AppShell navbar={{ width: NAVBAR_WIDTH, breakpoint: 'sm' }} h="100vh">
+      <AppShell
+        navbar={{ width: NAVBAR_WIDTH, breakpoint: 'sm' }}
+        footer={{ height: { base: 140, sm: 96 } }}
+        h="100vh"
+      >
         <AppShell.Navbar
           w={isNavbarCollapsed ? NAVBAR_COLLAPSED_WIDTH : NAVBAR_WIDTH}
-          h="100%"
           style={{ transition: 'width 300ms ease' }}
         >
           <Stack justify="space-between" h="100%">
@@ -198,7 +206,7 @@ export const AppLayout = () => {
 
         <AppShell.Main
           pl={isNavbarCollapsed ? NAVBAR_COLLAPSED_WIDTH : NAVBAR_WIDTH}
-          h="100vh"
+          h="calc(100vh - var(--app-shell-footer-height, 0px))"
           style={{ transition: 'padding 300ms ease', display: 'flex', flexDirection: 'column' }}
         >
           <Flex
@@ -216,13 +224,14 @@ export const AppLayout = () => {
             <DbHealthIndicator />
           </Flex>
 
-          <Box flex={1} mih={0} bg="var(--core-surface-1)" style={{ overflowY: 'auto' }}>
-            <Flex direction="column" mih="100%">
-              <Box flex={1}>{renderPanel()}</Box>
-              <AppFooter />
-            </Flex>
-          </Box>
+          <ScrollArea flex={1} mih={0} bg="var(--core-surface-1)" type="scroll" scrollbarSize={6}>
+            {renderPanel()}
+          </ScrollArea>
         </AppShell.Main>
+
+        <AppShell.Footer>
+          <AppFooter />
+        </AppShell.Footer>
       </AppShell>
     </>
   )
