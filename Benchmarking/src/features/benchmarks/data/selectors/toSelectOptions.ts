@@ -1,17 +1,5 @@
 import type { ComboboxData } from '@mantine/core'
 
-/**
- * Backend option endpoints may return any of these shapes:
- *   ['GPT-4o', ...]                          → strings
- *   [16, 32, ...]                            → numbers
- *   [{ id, name }, ...]                      → id/name objects
- *   [{ value, label }, ...]                  → value/label objects
- *   { data: [...] } | { results: [...] }     → wrapped in an envelope
- *
- * These selectors normalize all of them into Mantine Select option data so the
- * response always renders. Adjust the field picks if the real contract differs.
- */
-
 const unwrap = (raw: unknown): unknown[] => {
   if (Array.isArray(raw)) return raw
   if (raw && typeof raw === 'object') {

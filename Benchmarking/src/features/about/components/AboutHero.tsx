@@ -1,54 +1,7 @@
-import type { ComponentType } from 'react'
-import { Badge, Box, Card, Flex, Group, Paper, SimpleGrid, Stack, Text, ThemeIcon } from '@mantine/core'
-import {
-  IconBolt,
-  IconChartDots,
-  IconCloudNetwork,
-  IconCpu,
-  IconDatabase,
-  IconGauge,
-  IconServerBolt,
-  type IconProps,
-} from '@tabler/icons-react'
-
-const BRAND_GRADIENT = { from: 'indigo', to: 'cyan', deg: 135 } as const
-
-const HIGHLIGHTS = [
-  { label: 'Multi-node orchestration', icon: IconCloudNetwork },
-  { label: 'Real-time metrics', icon: IconBolt },
-  { label: 'GPU-aware scheduling', icon: IconServerBolt },
-]
-
-const ORBIT_ICONS = [IconCloudNetwork, IconDatabase, IconChartDots, IconServerBolt]
-
-type StatTileProps = {
-  icon: ComponentType<IconProps>
-  label: string
-  value: string
-  delta?: string
-}
-
-/** Compact stat tile — icon, label, value, and an optional trend badge. */
-const StatTile = ({ icon: Icon, label, value, delta }: StatTileProps) => (
-  <Paper withBorder radius="md" p="md" ta="center">
-    <ThemeIcon variant="light" color="cyan" size={36} radius="md" mx="auto" mb="xs">
-      <Icon size={18} />
-    </ThemeIcon>
-    <Text size="9px" fw={700} tt="uppercase" c="dimmed">
-      {label}
-    </Text>
-    <Group justify="center" gap={6} mt={2}>
-      <Text fw={800} fz={18}>
-        {value}
-      </Text>
-      {delta && (
-        <Badge color="teal" variant="light" size="xs" radius="sm">
-          {delta}
-        </Badge>
-      )}
-    </Group>
-  </Paper>
-)
+import { Badge, Box, Card, Flex, Group, SimpleGrid, Stack, Text, ThemeIcon } from '@mantine/core'
+import { IconBolt, IconCpu, IconGauge, IconServerBolt } from '@tabler/icons-react'
+import { StatTile } from './StatTile'
+import { BRAND_GRADIENT, HIGHLIGHTS, ORBIT_ICONS } from '../constants'
 
 /**
  * Hero banner for the About Us page: badge, headline, copy, and highlight

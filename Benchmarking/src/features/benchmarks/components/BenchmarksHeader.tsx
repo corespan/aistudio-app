@@ -1,25 +1,13 @@
-import { Button, Group, Indicator, Stack, Text, ThemeIcon, Title } from '@mantine/core'
-import { IconGauge, IconLayoutSidebarRightExpand, IconPlayerPlay } from '@tabler/icons-react'
+import { Button, Group, Stack, Text, ThemeIcon, Title } from '@mantine/core'
+import { IconGauge, IconPlayerPlay } from '@tabler/icons-react'
 import { CoreIcon } from '@/shared/ui'
-import { useRunStreamsStore } from '../store/useRunStreamsStore'
-
-type Props = {
-  /** Whether the runs list is currently refetching. */
-  isRefreshing?: boolean
-  onRefresh?: () => void
-  /** Whether the start-benchmark mutation is in flight. */
-  isStarting?: boolean
-  onStartBenchmark?: () => void
-}
+import type { BenchmarksHeaderProps } from '../types'
 
 /**
- * Page header for the BenchmarksformatMetric board: branded icon, title with a live run
- * count, supporting copy, a refresh action, and the start-benchmark action.
+ * Page header for the BenchmarksformatMetric board: branded icon, title,
+ * supporting copy, a refresh action, and the start-benchmark action.
  */
-export const BenchmarksHeader = ({ isStarting, onStartBenchmark }: Props) => {
-  const runCount = useRunStreamsStore((s) => Object.keys(s.streams).length)
-  const openPanel = useRunStreamsStore((s) => s.openPanel)
-
+export const BenchmarksHeader = ({ isStarting, onStartBenchmark }: BenchmarksHeaderProps) => {
   return (
     <Group justify="space-between" align="flex-start" wrap="nowrap">
       <Group align="center" gap="md" wrap="nowrap">

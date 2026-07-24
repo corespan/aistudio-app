@@ -2,12 +2,7 @@ import { useEffect, useMemo } from 'react'
 import { SimpleGrid, Stack, Text, TextInput } from '@mantine/core'
 import { Controller, useFormContext } from 'react-hook-form'
 import { extractConfigFields, formatConfigValue } from '../data/selectors/extractConfigFields'
-import type { StartBenchmarkFormValues } from '../startBenchmark.schema'
-
-type Props = {
-  /** Raw /models/config response — keys become editable fields. */
-  config: unknown
-}
+import type { StartBenchmarkFormValues, ModelConfigFieldsProps } from '../types'
 
 /**
  * Renders the model config response as editable inputs, including `precision`.
@@ -15,7 +10,7 @@ type Props = {
  * StartBenchmarkModal), so validity is owned entirely by that form's Zod
  * schema instead of being tracked locally.
  */
-export const ModelConfigFields = ({ config }: Props) => {
+export const ModelConfigFields = ({ config }: ModelConfigFieldsProps) => {
   const { control, setValue } = useFormContext<StartBenchmarkFormValues>()
 
   const fields = useMemo(() => Object.entries(extractConfigFields(config)), [config])

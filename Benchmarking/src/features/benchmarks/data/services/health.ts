@@ -1,18 +1,5 @@
 import { API_ORIGIN } from '@/shared/api/config'
-
-/**
- * Backend/database health probe.
- *
- * The endpoint lives at the server root (`/health`), *outside* the `/api/v1`
- * namespace that `AiClient` is bound to, so this uses `fetch` directly rather
- * than the shared client. (`AiClient` always prefixes `baseUrl` = `/api/v1/`.)
- */
-export type HealthStatus = {
-  /** Overall service status, e.g. "healthy". */
-  status: string
-  /** Database connectivity, e.g. "ok". */
-  database: string
-}
+import type { HealthStatus } from '../../types'
 
 export const getHealth = async (): Promise<HealthStatus> => {
   const res = await fetch(`${API_ORIGIN}/health`, { headers: { Accept: 'application/json' } })

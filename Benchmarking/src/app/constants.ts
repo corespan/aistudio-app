@@ -1,4 +1,6 @@
-import { Card, CSSVariablesResolver, Paper, ScrollArea, Select } from '@mantine/core'
+import { Card, Paper, ScrollArea, Select, type CSSVariablesResolver } from '@mantine/core'
+import type { ComponentType } from 'react'
+import { IconBrandPython, IconChartBar, IconInfoCircle, type IconProps } from '@tabler/icons-react'
 
 const RESOLVER: CSSVariablesResolver = (theme) => ({
   variables: {},
@@ -67,4 +69,52 @@ const APP_THEME = {
   },
 }
 
-export { APP_THEME, RESOLVER, APP_SCALE, HEADER_HEIGHT, HEADER_OFFSET }
+// AppFooter
+const REPO_URL = 'https://github.com/corespan/aistudio-app'
+// Height of the visible gap above the footer bar — matches the page's own
+// background so it reads as breathing room, not part of the footer itself.
+const TOP_GAP = 12
+
+// AppLayout
+type SectionKey = 'benchmarks' | 'jupyter' | 'about'
+
+type Section = {
+  key: SectionKey
+  label: string
+  icon: ComponentType<IconProps>
+}
+
+type NavGroup = {
+  key: string
+  label: string
+  children: Section[]
+}
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    key: 'menu',
+    label: 'Menu',
+    children: [
+      { key: 'benchmarks', label: 'Benchmarks', icon: IconChartBar },
+      { key: 'jupyter', label: 'Launch Jupyter', icon: IconBrandPython },
+      { key: 'about', label: 'About Us', icon: IconInfoCircle },
+    ],
+  },
+]
+
+const NAVBAR_WIDTH = 248
+const NAVBAR_COLLAPSED_WIDTH = 48
+
+export {
+  APP_THEME,
+  RESOLVER,
+  APP_SCALE,
+  HEADER_HEIGHT,
+  HEADER_OFFSET,
+  REPO_URL,
+  TOP_GAP,
+  NAV_GROUPS,
+  NAVBAR_WIDTH,
+  NAVBAR_COLLAPSED_WIDTH,
+}
+export type { SectionKey, Section, NavGroup }

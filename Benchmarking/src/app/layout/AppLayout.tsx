@@ -15,54 +15,28 @@ import {
   useMantineColorScheme,
 } from '@mantine/core'
 import {
-  IconBrandPython,
-  IconChartBar,
   IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
-  IconInfoCircle,
   IconLogout,
   IconSettings,
   IconUserCircle,
-  type IconProps,
 } from '@tabler/icons-react'
-import { useState, type ComponentType } from 'react'
+import { useState } from 'react'
 import { AppFooter } from '@/app/layout/AppFooter'
 import { CoreIcon } from '@/shared/ui'
 import { Benchmarks } from '@/features/benchmarks/Benchmarks'
 import { LaunchJupyter } from '@/features/benchmarks/components/LaunchJupyter'
 import { DbHealthIndicator } from '@/features/benchmarks/components/DbHealthIndicator'
 import { AboutUs } from '@/features/about/AboutUs'
-import { HEADER_HEIGHT } from '@/app/constants'
-
-type SectionKey = 'benchmarks' | 'jupyter' | 'about'
-
-type Section = {
-  key: SectionKey
-  label: string
-  icon: ComponentType<IconProps>
-}
-
-type NavGroup = {
-  key: string
-  label: string
-  children: Section[]
-}
-
-const NAV_GROUPS: NavGroup[] = [
-  {
-    key: 'menu',
-    label: 'Menu',
-    children: [
-      { key: 'benchmarks', label: 'Benchmarks', icon: IconChartBar },
-      { key: 'jupyter', label: 'Launch Jupyter', icon: IconBrandPython },
-      { key: 'about', label: 'About Us', icon: IconInfoCircle },
-    ],
-  },
-]
-
-const NAVBAR_WIDTH = 248
-const NAVBAR_COLLAPSED_WIDTH = 48
+import {
+  HEADER_HEIGHT,
+  NAV_GROUPS,
+  NAVBAR_WIDTH,
+  NAVBAR_COLLAPSED_WIDTH,
+  type SectionKey,
+  type NavGroup,
+} from '@/app/constants'
 
 export const AppLayout = () => {
   const { colorScheme } = useMantineColorScheme()

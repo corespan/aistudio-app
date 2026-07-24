@@ -6,14 +6,12 @@ import { z } from 'zod'
 import { useLaunchJupyter } from '../data/queries/useLaunchJupyter'
 import { useJupyterRunStore } from '../store/useJupyterRunStore'
 import { LogStreamView } from './LogStreamView'
+import type { LaunchJupyterForm } from '../types'
+import { LAUNCH_JUPYTER_DEFAULTS } from '../constants'
 
 const schema = z.object({
   nodeIp: z.string().min(1, 'Enter a node IP'),
-})
-
-type LaunchJupyterForm = z.infer<typeof schema>
-
-const DEFAULT_VALUES: LaunchJupyterForm = { nodeIp: '' }
+}) satisfies z.ZodType<LaunchJupyterForm>
 
 const readTaskId = (raw: unknown): string | null => {
   const obj = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : null
@@ -67,7 +65,7 @@ export const LaunchJupyter = () => {
             <CoreForm
               formId="launch-jupyter"
               schema={schema}
-              defaultValues={DEFAULT_VALUES}
+              defaultValues={LAUNCH_JUPYTER_DEFAULTS}
               onSubmit={handleSubmit}
             >
               <Group align="flex-end" gap="md" wrap="nowrap">

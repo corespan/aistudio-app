@@ -22,11 +22,9 @@ import {
   IconAlertCircle,
   IconCheck,
   IconCpu,
-  IconGauge,
   IconPlayerPlay,
   IconRocket,
   IconServer,
-  IconSettings,
 } from '@tabler/icons-react'
 import { CoreIcon, CoreSelect } from '@/shared/ui'
 import { useModels, useNodes } from '../data/queries/useBenchmarkOptions'
@@ -34,52 +32,19 @@ import { useModelConfig } from '../data/queries/useModelConfig'
 import { useStartBenchmark } from '../data/queries/useStartBenchmark'
 import { extractConfigFields, mergeConfigValues } from '../data/selectors/extractConfigFields'
 import { readTaskId } from '../data/selectors/toTaskId'
-import { startBenchmarkSchema, type StartBenchmarkFormValues } from '../startBenchmark.schema'
+import { startBenchmarkSchema } from '../startBenchmark.schema'
 import { useRunStreamsStore } from '../store/useRunStreamsStore'
 import { ModelConfigFields } from './ModelConfigFields'
+import type { StartBenchmarkFormValues, StartBenchmarkModalProps, ReviewRowProps } from '../types'
+import {
+  START_BENCHMARK_STEPS,
+  START_BENCHMARK_EMPTY_VALUES,
+  START_BENCHMARK_GRADIENT,
+  CONFIG_INCOMPLETE_MESSAGE,
+  CONFIG_UNAVAILABLE_MESSAGE,
+} from '../constants'
 
-type Props = {
-  opened: boolean
-  onClose: () => void
-}
-
-const STEPS = [
-  {
-    title: 'Select Node',
-    description: 'Choose the machine where the benchmark will run.',
-    icon: IconServer,
-  },
-  {
-    title: 'Configure Model',
-    description: 'Select the model to benchmark.',
-    icon: IconCpu,
-  },
-  {
-    title: 'Model Configuration',
-    description: 'Configuration fetched for the selected model.',
-    icon: IconSettings,
-  },
-  {
-    title: 'Review & Confirm',
-    description: 'Please review your configuration before starting.',
-    icon: IconGauge,
-  },
-] as const
-
-const EMPTY_VALUES: StartBenchmarkFormValues = {
-  nodeIp: '',
-  model: '',
-  config: {},
-}
-
-const GRADIENT = { from: 'cyan', to: 'indigo', deg: 135 } as const
-
-const CONFIG_INCOMPLETE_MESSAGE =
-  'Configuration is incomplete. Please ensure all fields are present.'
-const CONFIG_UNAVAILABLE_MESSAGE =
-  "This model's configuration could not be loaded correctly. Please try again or select a different model."
-
-const ReviewRow = ({ label, value }: { label: string; value: string }) => (
+const ReviewRow = ({ label, value }: ReviewRowProps) => (
   <Group justify="space-between" wrap="nowrap">
     <Text size="sm" c="dimmed">
       {label}
@@ -90,7 +55,7 @@ const ReviewRow = ({ label, value }: { label: string; value: string }) => (
   </Group>
 )
 
-export const StartBenchmarkModal = ({ opened, onClose }: Props) => {
+export const StartBenchmarkModal = ({ opened, onClose }: StartBenchmarkModalProps) => {
   const [active, setActive] = useState(0)
   const [validationError, setValidationError] = useState<string | null>(null)
 
@@ -102,7 +67,7 @@ export const StartBenchmarkModal = ({ opened, onClose }: Props) => {
     mode: 'onTouched',
     reValidateMode: 'onChange',
     shouldFocusError: true,
-    defaultValues: EMPTY_VALUES,
+    defaultValues: START_BENCHMARK_EMPTY_VALUES,
   })
 
   const nodeIp = useWatch({ control: form.control, name: 'nodeIp' })
@@ -142,7 +107,7 @@ export const StartBenchmarkModal = ({ opened, onClose }: Props) => {
   const reset = () => {
     setActive(0)
     setValidationError(null)
-    form.reset(EMPTY_VALUES)
+    form.reset(START_BENCHMARK_EMPTY_VALUES)
     startBenchmark.reset()
   }
 
@@ -175,7 +140,7 @@ export const StartBenchmarkModal = ({ opened, onClose }: Props) => {
       }
     }
 
-    setActive((step) => Math.min(step + 1, STEPS.length - 1))
+    setActive((step) => Math.min(step + 1, START_BENCHMARK_STEPS.length - 1))
   }
 
   const handleBack = () => setActive((step) => Math.max(step - 1, 0))
@@ -231,7 +196,7 @@ export const StartBenchmarkModal = ({ opened, onClose }: Props) => {
     },
   )
 
-  const StepIcon = STEPS[active].icon
+  const StepIcon = START_BENCHMARK_STEPS[active].icon
   // Review the exact config that will be submitted — the user's edits merged
   // over the fetched response — not the untouched API response. Only computed
   // on the Review step itself, since configValues changes on every keystroke
@@ -245,7 +210,7 @@ export const StartBenchmarkModal = ({ opened, onClose }: Props) => {
       onClose={handleClose}
       title={
         <Group gap="sm">
-          <ThemeIcon size={32} radius="md" variant="gradient" gradient={GRADIENT}>
+          <ThemeIcon size={32} radius="md" variant="gradient" gradient={START_BENCHMARK_GRADIENT}>
             <CoreIcon icon={<IconRocket stroke={1.8} />} size={18} />
           </ThemeIcon>
           <Title order={4} fw={700}>
@@ -264,7 +229,7 @@ export const StartBenchmarkModal = ({ opened, onClose }: Props) => {
         <Group align="stretch" gap={0} wrap="nowrap">
           <Box w={230} p="xl">
             <Timeline active={active} bulletSize={26} lineWidth={2}>
-              {STEPS.map((step, index) => (
+              {START_BENCHMARK_STEPS.map((step, index) => (
                 <Timeline.Item
                   key={step.title}
                   bullet={
@@ -299,10 +264,10 @@ export const StartBenchmarkModal = ({ opened, onClose }: Props) => {
                   </ThemeIcon>
                   <div>
                     <Text fw={700} size="lg">
-                      {STEPS[active].title}
+                      {START_BENCHMARK_STEPS[active].title}
                     </Text>
                     <Text size="sm" c="dimmed">
-                      {STEPS[active].description}
+                      {START_BENCHMARK_STEPS[active].description}
                     </Text>
                   </div>
                 </Group>

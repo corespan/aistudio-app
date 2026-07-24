@@ -1,33 +1,6 @@
 import { create } from 'zustand'
 import { API_ORIGIN } from '@/shared/api/config'
-import type { LogStreamStatus } from '../hooks/useBenchmarkLogStream'
-
-/**
- * The single active Jupyter launch and its live log stream. Kept in a store (not
- * component state) so the run survives navigating away from the Launch Jupyter
- * panel and back — mirroring how benchmark runs persist in `useRunStreamsStore`.
- */
-export type JupyterRun = {
-  taskId: string
-  nodeIp: string | null
-  /** Notebook URL parsed out of the log stream once the server reports ready. */
-  url: string | null
-  /** True once the user has opened the notebook via the button. Persisted here so
-   *  the button stays disabled after navigating away and back. */
-  opened: boolean
-  lines: string[]
-  status: LogStreamStatus
-}
-
-type JupyterRunStore = {
-  run: JupyterRun | null
-  /** Begin streaming a launch's logs. Idempotent for the same task id. */
-  startRun: (input: { taskId: string; nodeIp?: string | null }) => void
-  /** Mark that the notebook tab has been opened (disables the Open button). */
-  markOpened: () => void
-  /** Tear down the stream and clear the run. */
-  reset: () => void
-}
+import type { JupyterRun, JupyterRunStore } from '../types'
 
 // The notebook URL isn't in the launch response — it arrives later in the log
 // stream on the definitive ready line, e.g.

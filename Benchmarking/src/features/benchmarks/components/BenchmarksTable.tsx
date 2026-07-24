@@ -1,24 +1,14 @@
 import { useMemo } from 'react'
-import { ActionIcon, Badge, Button, Group, Tooltip } from '@mantine/core'
-import { modals } from '@mantine/modals'
-import { IconActivity, IconTrash } from '@tabler/icons-react'
-import { CoreIcon, CoreTable, useCoreTable } from '@/shared/ui'
+import { Badge, Group, Tooltip } from '@mantine/core'
+import { CoreTable, useCoreTable } from '@/shared/ui'
 import type { ColumnDef } from '@tanstack/react-table'
 import type { BenchmarkRun } from '../types'
 import { useBenchmarks } from '../data/queries/useBenchmarks'
-import { useDeleteBenchmark } from '../data/queries/useDeleteBenchmark'
 import { useRunStreamsStore } from '../store/useRunStreamsStore'
 import { toRunStreamRow } from '../data/selectors/toRunStreamRow'
-
-const STATUS_COLORS: Record<string, string> = {
-  success: 'green',
-  completed: 'green',
-  running: 'blue',
-  'in progress': 'blue',
-  fail: 'red',
-  failed: 'red',
-  pending: 'gray',
-}
+import { ViewProgressButton } from './ViewProgressButton'
+import { DeleteRunButton } from './DeleteRunButton'
+import { BENCHMARKS_TABLE_STATUS_COLORS } from '../constants'
 
 const formatMetric = (value: number | null) => (value == null ? '—' : value.toLocaleString())
 
@@ -43,64 +33,6 @@ const byTimestamp: ColumnDef<BenchmarkRun>['sortingFn'] = (a, b, id) =>
 
 // Stable empty reference — a fresh `[]` each render livelocks TanStack Table's auto-reset.
 const EMPTY_ROWS: BenchmarkRun[] = []
-
-/**
- * Opens the progress drawer for a run, starting its log stream if it isn't already
- * streaming. Reads the store directly rather than being prop-drilled.
- */
-const ViewProgressButton = ({ run }: { run: BenchmarkRun }) => {
-  const viewRun = useRunStreamsStore((s) => s.viewRun)
-  return (
-    <Button
-      size="compact-xs"
-      variant="light"
-      leftSection={<CoreIcon icon={<IconActivity stroke={1.8} />} size={14} />}
-      onClick={() => viewRun({ taskId: run.runId, model: run.model, nodeIp: run.machineIp })}
-    >
-      View Progress
-    </Button>
-  )
-}
-
-/**
- * Deletes a single run after a confirmation prompt. Reads the mutation directly
- * so the column definition stays free of prop drilling.
- */
-const DeleteRunButton = ({ run }: { run: BenchmarkRun }) => {
-  const { mutate, isPending } = useDeleteBenchmark()
-  const closeRun = useRunStreamsStore((s) => s.closeRun)
-
-  const confirmDelete = () =>
-    modals.openConfirmModal({
-      title: 'Delete this run?',
-      children: (
-        <>
-          Run <strong>{run.runId}</strong>
-          {run.model ? ` (${run.model})` : ''} will be permanently deleted. This
-          cannot be undone.
-        </>
-      ),
-      labels: { confirm: 'Delete', cancel: 'Cancel' },
-      confirmProps: { color: 'red' },
-      // On success, also drop the run's live stream from the store so it can't
-      // reappear as a synthetic pending row (or linger in the progress drawer).
-      onConfirm: () => mutate(run.runId, { onSuccess: () => closeRun(run.runId) }),
-    })
-
-  return (
-    <Tooltip label="Delete run" withArrow>
-      <ActionIcon
-        color="red"
-        variant="subtle"
-        loading={isPending}
-        onClick={confirmDelete}
-        aria-label={`Delete run ${run.runId}`}
-      >
-        <CoreIcon icon={<IconTrash stroke={1.8} />} size={16} />
-      </ActionIcon>
-    </Tooltip>
-  )
-}
 
 const columns: ColumnDef<BenchmarkRun>[] = [
   { accessorKey: 'runId', header: 'Run ID' },
@@ -134,7 +66,7 @@ const columns: ColumnDef<BenchmarkRun>[] = [
       const status = getValue<string>()
       if (!status) return '—'
       return (
-        <Badge variant="light" color={STATUS_COLORS[status.toLowerCase()] ?? 'gray'}>
+        <Badge variant="light" color={BENCHMARKS_TABLE_STATUS_COLORS[status.toLowerCase()] ?? 'gray'}>
           {status}
         </Badge>
       )

@@ -8,27 +8,35 @@ const toNum = (value: unknown): number | null => {
   return Number.isNaN(n) ? null : n
 }
 
+// Coerce to a string, falling back when the field is missing/null so the table
+// renders a placeholder instead of the literal text "undefined"/"null".
+// (String(undefined) === "undefined", a truthy string, so a bare `|| fallback`
+// does NOT catch this — the null/undefined check has to happen before String().)
+const toStr = (value: unknown, fallback = '—'): string => (value == null ? fallback : String(value))
+
 const firstDefined = (...values: unknown[]) => values.find((v) => v != null)
 
 /** Normalize a single raw benchmark record from the API into a BenchmarkRun. */
 export const normalizeBenchmarkRun = (item: Record<string, unknown>): BenchmarkRun => ({
-  runId: String(item.run_id),
-  model: String(item.model_name),
+  // Empty (not '—'): downstream code keys/dedupes/deletes by runId, so a
+  // missing id should be falsy rather than a plausible-looking placeholder.
+  runId: toStr(item.run_id, ''),
+  model: toStr(item.model_name),
   machineIp: Array.isArray(item.node_ips) ? item.node_ips.join(', ') : '',
-  gpuType: String(item.gpu_type),
+  gpuType: toStr(item.gpu_type),
   gpuCount: toNum(
     firstDefined(item.gpu_count, item.gpuCount, item.num_gpus, item.numGpus, item.gpu_num, item.gpuNum),
   ),
-  benchmarkType: String(item.precision),
-  precision: String(item.precision),
+  benchmarkType: toStr(item.precision),
+  precision: toStr(item.precision),
   concurrency: toNum(item.concurrency),
   throughput: toNum(item.total_token_throughput),
   ttft: toNum(item.mean_ttft_ms),
   tpot: toNum(item.mean_tpot_ms),
   e2el: toNum(item.mean_e2el_ms),
   memory: null,
-  status: String(item.status),
-  timestamp: String(item.created_at),
+  status: toStr(item.status, 'unknown'),
+  timestamp: toStr(item.created_at, ''),
 })
 
 export const toBenchmarkRows = (raw: unknown): BenchmarkRun[] => {

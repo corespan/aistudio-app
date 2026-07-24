@@ -1,15 +1,13 @@
-import type { ComponentType } from 'react'
-import { Badge, Card, Group, SimpleGrid, Skeleton, Stack, Text, ThemeIcon } from '@mantine/core'
+import { Badge, Card, Group, SimpleGrid, Skeleton, Text, ThemeIcon } from '@mantine/core'
 import {
   IconActivityHeartbeat,
   IconBolt,
   IconClockBolt,
   IconGauge,
   IconUsersGroup,
-  type IconProps,
 } from '@tabler/icons-react'
 import { useBenchmarks } from '../data/queries/useBenchmarks'
-import type { BenchmarkRun } from '../types'
+import type { BenchmarkRun, BenchmarkKpi } from '../types'
 
 const nums = (rows: BenchmarkRun[], sel: (r: BenchmarkRun) => number | null): number[] =>
   rows.map(sel).filter((n): n is number => n != null && Number.isFinite(n))
@@ -21,18 +19,6 @@ const fmt = (n: number | null, digits = 1): string =>
   n == null
     ? '—'
     : new Intl.NumberFormat(undefined, { maximumFractionDigits: n >= 100 ? 0 : digits }).format(n)
-
-type Kpi = {
-  key: string
-  label: string
-  value: string
-  unit?: string
-  caption?: string
-  hint?: string
-  /** Mantine palette color name driving the icon gradient, badge, and unit. */
-  color: string
-  Icon: ComponentType<IconProps>
-}
 
 /**
  * Summary stat cards derived from the (filtered) benchmark result set: best and
@@ -56,7 +42,7 @@ export const BenchmarkKpiCards = () => {
   const lowestLatency = e2els.length ? Math.min(...e2els) : null
   const peakConcurrency = concurrencies.length ? Math.max(...concurrencies) : null
 
-  const kpis: Kpi[] = [
+  const kpis: BenchmarkKpi[] = [
     {
       key: 'throughput',
       label: 'Best Throughput',

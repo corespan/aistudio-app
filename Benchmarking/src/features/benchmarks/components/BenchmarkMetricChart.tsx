@@ -21,31 +21,7 @@ import type { BenchmarkRun } from '../types'
 import { useBenchmarks } from '../data/queries/useBenchmarks'
 import { useBenchmarkFiltersStore } from '../store/useBenchmarkFiltersStore'
 import { colorForGpuType, normalizeGpuType } from '../lib/gpuColors'
-
-// Y-axis choices. `key` is a field on BenchmarkRun; `kind` decides the Y axis
-// type — numeric metrics get a value axis, precision gets a category axis since
-// its values are labels (fp16, fp8, …), not numbers.
-const METRICS = [
-  { key: 'throughput', label: 'Throughput (tokens/s)', kind: 'number' },
-  { key: 'ttft', label: 'TTFT (ms)', kind: 'number' },
-  { key: 'tpot', label: 'TPOT (ms)', kind: 'number' },
-  { key: 'e2el', label: 'E2EL (ms)', kind: 'number' },
-  { key: 'precision', label: 'Precision', kind: 'category' },
-] as const satisfies ReadonlyArray<{
-  key: keyof BenchmarkRun
-  label: string
-  kind: 'number' | 'category'
-}>
-
-type MetricKey = (typeof METRICS)[number]['key']
-
-// The Benchmark Type dropdown (Configure panel) names which metric the Y axis
-// plots. Values mirror BENCHMARK_TYPE_OPTIONS; this maps each to a METRICS key.
-const METRIC_BY_TYPE: Record<string, MetricKey> = {
-  Throughput: 'throughput',
-  TTFT: 'ttft',
-  TPOT: 'tpot',
-}
+import { CHART_METRICS, CHART_METRIC_BY_TYPE } from '../constants'
 
 // Convert a hex color to rgba so we can build translucent gradient stops.
 const rgba = (hex: string, alpha: number) => {
@@ -73,7 +49,7 @@ const runTooltipHtml = (run: BenchmarkRun, accentColor: string) => `
 export const BenchmarkMetricChart = () => {
   const { data } = useBenchmarks()
   const benchmarkType = useBenchmarkFiltersStore((s) => s.benchmarkType)
-  const metric = METRIC_BY_TYPE[benchmarkType] ?? 'throughput'
+  const metric = CHART_METRIC_BY_TYPE[benchmarkType] ?? 'throughput'
   const { colorScheme } = useMantineColorScheme()
   const isDark = colorScheme === 'dark'
 
@@ -115,7 +91,7 @@ export const BenchmarkMetricChart = () => {
   // report it) — in that case we show an empty state instead of a blank chart.
   const hasData = useMemo(() => {
     const rows = data ?? []
-    const meta = METRICS.find((m) => m.key === metric)!
+    const meta = CHART_METRICS.find((m) => m.key === metric)!
     return meta.kind === 'category'
       ? rows.some((r) => r.concurrency != null && r.precision)
       : rows.some((r) => r.concurrency != null && r[metric] != null)
@@ -126,7 +102,7 @@ export const BenchmarkMetricChart = () => {
   // so this is the single source that drives the redraw.
   const option = useMemo<EChartsOption>(() => {
     const rows = data ?? []
-    const meta = METRICS.find((m) => m.key === metric)!
+    const meta = CHART_METRICS.find((m) => m.key === metric)!
 
     const axisText = isDark ? '#c1c2c5' : '#495057'
     const axisLine = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)'
@@ -337,7 +313,7 @@ export const BenchmarkMetricChart = () => {
       <Group justify="space-between" mb="sm">
         <Text fw={600}>Metric vs Concurrency</Text>
         <Text size="sm" c="dimmed">
-          {METRICS.find((m) => m.key === metric)?.label}
+          {CHART_METRICS.find((m) => m.key === metric)?.label}
         </Text>
       </Group>
 
@@ -348,7 +324,7 @@ export const BenchmarkMetricChart = () => {
               <Text c="dimmed" size="sm">
                 {(data ?? []).length === 0
                   ? 'No Benchmark Runs Found'
-                  : `No ${METRICS.find((m) => m.key === metric)?.label ?? 'benchmark'} data to display`}
+                  : `No ${CHART_METRICS.find((m) => m.key === metric)?.label ?? 'benchmark'} data to display`}
               </Text>
             </Center>
           ) : (

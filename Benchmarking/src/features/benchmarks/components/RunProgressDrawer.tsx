@@ -1,27 +1,13 @@
 import { Badge, Drawer, Group, Paper, ScrollArea, Stack, Text, UnstyledButton } from '@mantine/core'
 import { memo } from 'react'
 import { HEADER_OFFSET } from '@/app/constants'
-import type { LogStreamStatus } from '../hooks/useBenchmarkLogStream'
-import { useRunStreamsStore, type RunStream } from '../store/useRunStreamsStore'
+import { useRunStreamsStore } from '../store/useRunStreamsStore'
 import { LogStreamView } from './LogStreamView'
-
-const STATUS_COLOR: Record<LogStreamStatus, string> = {
-  idle: 'gray',
-  open: 'teal',
-  reconnecting: 'yellow',
-  error: 'red',
-  closed: 'gray',
-  failed: 'red',
-}
+import type { RunStream, RunSwitcherItemProps } from '../types'
+import { RUN_SWITCHER_STATUS_COLOR } from '../constants'
 
 // Most-recent run first, so the just-started run lands at the top of the switcher.
 const byStartedDesc = (a: RunStream, b: RunStream) => b.startedAt.localeCompare(a.startedAt)
-
-type RunSwitcherItemProps = {
-  run: RunStream
-  active: boolean
-  onSelect: (taskId: string) => void
-}
 
 // Memoized so a streamed log line (which updates only the active run's object in
 // the store) doesn't re-render every other switcher item. Native `title` tooltips
@@ -52,7 +38,7 @@ const RunSwitcherItem = memo(({ run, active, onSelect }: RunSwitcherItemProps) =
             {run.taskId}
           </Text>
         </Stack>
-        <Badge size="xs" variant="dot" color={STATUS_COLOR[run.status]} radius="sm" />
+        <Badge size="xs" variant="dot" color={RUN_SWITCHER_STATUS_COLOR[run.status]} radius="sm" />
       </Group>
     </UnstyledButton>
   )

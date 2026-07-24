@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { API_ORIGIN } from '@/shared/api/config'
-
-export type LogStreamStatus = 'idle' | 'open' | 'reconnecting' | 'error' | 'closed' | 'failed'
+import type { LogStreamStatus } from '../types'
 
 /**
  * Generic SSE log-stream hook. Pass the full API path (e.g.

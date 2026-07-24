@@ -2,45 +2,7 @@ import { create } from 'zustand'
 import { queryClient } from '@/shared/api/queryClient'
 import { API_ORIGIN } from '@/shared/api/config'
 import { benchmarkOptionKeys } from '../data/keys'
-import type { LogStreamStatus } from '../hooks/useBenchmarkLogStream'
-
-/**
- * A single benchmark run's live log stream. This is the shared, component-independent
- * state for one run — buffered lines, connection status, and the id of the last
- * delivered SSE event (used to resume after a reconnect).
- */
-export type RunStream = {
-  taskId: string
-  model: string | null
-  nodeIp: string | null
-  /** ISO timestamp captured when streaming started — orders runs in the switcher. */
-  startedAt: string
-  lines: string[]
-  status: LogStreamStatus
-  lastEventId: string | null
-}
-
-type StartRunInput = { taskId: string; model?: string | null; nodeIp?: string | null }
-
-type RunStreamsStore = {
-  /** All runs being (or that have been) streamed this session, keyed by task id. */
-  streams: Record<string, RunStream>
-  /** Whether the progress drawer is open. */
-  drawerOpen: boolean
-  /** The run currently selected in the drawer, or null when none is chosen. */
-  openRunId: string | null
-  /** Begin streaming a run's logs. Idempotent — never restarts an active stream. */
-  startRun: (input: StartRunInput) => void
-  /** Ensure a run is streaming, then open the drawer focused on it. */
-  viewRun: (input: StartRunInput) => void
-  /** Open the drawer, defaulting the selection to the most recent run. */
-  openPanel: () => void
-  /** Switch the drawer to an already-streaming run without touching any stream. */
-  openDrawer: (taskId: string) => void
-  closeDrawer: () => void
-  /** Tear down a run's stream and drop it from the store. */
-  closeRun: (taskId: string) => void
-}
+import type { RunStream, RunStreamsStore } from '../types'
 
 // Most-recent run first — used to default the drawer's selection.
 const byStartedDesc = (a: RunStream, b: RunStream) => b.startedAt.localeCompare(a.startedAt)

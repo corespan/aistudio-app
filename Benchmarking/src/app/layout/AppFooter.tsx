@@ -1,10 +1,6 @@
 import { Box, Button, Container, Group, Text, ThemeIcon } from '@mantine/core'
 import { IconBrandGithub, IconChartBar, IconStar } from '@tabler/icons-react'
-
-const REPO_URL = 'https://github.com/corespan/aistudio-app'
-// Height of the visible gap above the footer bar — matches the page's own
-// background so it reads as breathing room, not part of the footer itself.
-const TOP_GAP = 12
+import { REPO_URL, TOP_GAP } from '@/app/constants'
 
 /**
  * Fixed AppShell.Footer bar spanning the full screen width, including under

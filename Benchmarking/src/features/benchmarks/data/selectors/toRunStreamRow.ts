@@ -1,5 +1,4 @@
-import type { BenchmarkRun } from '../../types'
-import type { RunStream } from '../../store/useRunStreamsStore'
+import type { BenchmarkRun, RunStream } from '../../types'
 
 /** Map the SSE stream status to a human-readable table status. */
 const streamStatusToDisplay = (status: RunStream['status']): string => {

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { StartBenchmarkFormValues } from './types'
 
 /**
  * Single source of truth for what a valid Start Benchmark submission looks
@@ -10,6 +11,4 @@ export const startBenchmarkSchema = z.object({
   nodeIp: z.string().min(1, 'Node IP is required'),
   model: z.string().min(1, 'Model is required'),
   config: z.record(z.string(), z.string().min(1, 'This field is required')),
-})
-
-export type StartBenchmarkFormValues = z.infer<typeof startBenchmarkSchema>
+}) satisfies z.ZodType<StartBenchmarkFormValues>

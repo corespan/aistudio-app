@@ -1,31 +1,7 @@
 import { useMemo } from 'react'
 import { Badge, Code, Group, ScrollArea, Stack, Text } from '@mantine/core'
-import type { LogStreamStatus } from '../hooks/useBenchmarkLogStream'
-
-type Props = {
-  /** Task id shown in the log header. */
-  taskId: string
-  lines: string[]
-  status: LogStreamStatus
-}
-
-const STATUS_COLOR: Record<LogStreamStatus, string> = {
-  idle: 'gray',
-  open: 'teal',
-  reconnecting: 'yellow',
-  error: 'orange',
-  closed: 'green',
-  failed: 'red',
-}
-
-const STATUS_LABEL: Record<LogStreamStatus, string> = {
-  idle: 'Connecting…',
-  open: 'Streaming',
-  reconnecting: 'Reconnecting…',
-  error: 'Disconnected',
-  closed: 'Completed',
-  failed: 'Failed',
-}
+import type { LogStreamViewProps } from '../types'
+import { LOG_STREAM_STATUS_COLOR, LOG_STREAM_STATUS_LABEL } from '../constants'
 
 // Tidy the raw stream for display: trim surrounding whitespace, drop blank lines,
 // and collapse consecutive duplicates (progress spam) so the log reads meaningfully.
@@ -45,7 +21,7 @@ const cleanLines = (lines: string[]): string[] => {
  * `status` it's given, whether they come from the one-shot `useLogStream` hook or
  * the shared run-streams store. Owns no stream itself.
  */
-export const LogStreamView = ({ taskId, lines, status }: Props) => {
+export const LogStreamView = ({ taskId, lines, status }: LogStreamViewProps) => {
   // Memoized so we don't re-scan the whole buffer on every render (each streamed
   // line triggers one) — keeps the panel snappy while logs pour in.
   const text = useMemo(() => {
@@ -59,8 +35,8 @@ export const LogStreamView = ({ taskId, lines, status }: Props) => {
         <Text fw={600} size="sm">
           Logs — {taskId}
         </Text>
-        <Badge variant="light" color={STATUS_COLOR[status]} radius="sm">
-          {STATUS_LABEL[status]}
+        <Badge variant="light" color={LOG_STREAM_STATUS_COLOR[status]} radius="sm">
+          {LOG_STREAM_STATUS_LABEL[status]}
         </Badge>
       </Group>
 

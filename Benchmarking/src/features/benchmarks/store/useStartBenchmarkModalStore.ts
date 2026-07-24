@@ -1,11 +1,5 @@
 import { create } from 'zustand'
-
-type StartBenchmarkModalStore = {
-  /** Whether the Start Benchmark wizard modal is open. */
-  isOpen: boolean
-  open: () => void
-  close: () => void
-}
+import type { StartBenchmarkModalStore } from '../types'
 
 /**
  * Feature-scoped store for the Start Benchmark modal's open state — lets the
