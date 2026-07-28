@@ -14,12 +14,19 @@ export const AboutHero = () => (
     <Flex gap="xl" align="center" wrap="wrap">
       <Box flex={7} miw={280}>
         <Stack gap="md">
-          <Badge variant="light" color="indigo" radius="sm" size="sm" w="fit-content" tt="uppercase">
+          <Badge
+            variant="light"
+            color="indigo"
+            radius="sm"
+            size="sm"
+            w="fit-content"
+            tt="uppercase"
+          >
             About AI Studio
           </Badge>
 
           <Text fw={800} fz={38} lh={1.15}>
-            Benchmarking AI Infrastructure at{' '}
+            AI Orchestration Infrastructure at{' '}
             <Text component="span" inherit variant="gradient" gradient={BRAND_GRADIENT}>
               Enterprise Scale
             </Text>

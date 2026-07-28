@@ -7,8 +7,8 @@ import { REPO_URL, TOP_GAP } from '@/app/constants'
  * the sidebar — it does not scroll with page content. A small page-colored
  * gap sits above the footer bar, separating it from the content above by
  * spacing alone (no divider line). Kept deliberately plain: brand mark on
- * the left, a simple "Star us on GitHub" callout on the right, no gradients
- * or extra chrome.
+ * the left, a "Star us on GitHub" callout on the right, no gradients or
+ * extra chrome.
  */
 export const AppFooter = () => (
   <Box h="100%" bg="var(--core-surface-1)">
@@ -36,8 +36,9 @@ export const AppFooter = () => (
               rel="noopener noreferrer"
               variant="default"
               size="xs"
-              leftSection={<IconBrandGithub size={15} />}
-              rightSection={<IconStar size={13} />}
+              radius="md"
+              leftSection={<IconBrandGithub size={15} aria-hidden />}
+              rightSection={<IconStar size={13} aria-hidden />}
             >
               Star us on GitHub
             </Button>

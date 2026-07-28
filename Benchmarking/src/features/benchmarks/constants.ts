@@ -23,6 +23,18 @@ export const BENCHMARKS_TABLE_STATUS_COLORS: Record<string, string> = {
   pending: 'gray',
 }
 
+// JupyterInstancesTable
+export const JUPYTER_INSTANCE_STATE_COLORS: Record<string, string> = {
+  ready: 'green',
+  running: 'green',
+  pending: 'yellow',
+  launching: 'yellow',
+  starting: 'yellow',
+  failed: 'red',
+  error: 'red',
+  stopped: 'gray',
+}
+
 // BenchmarkMetricChart
 // Y-axis choices. `key` is a field on BenchmarkRun; `kind` decides the Y axis
 // type — numeric metrics get a value axis, precision gets a category axis since

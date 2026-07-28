@@ -33,7 +33,6 @@ export const BenchmarksHeader = ({ isStarting, onStartBenchmark }: BenchmarksHea
       </Group>
 
       <Group gap="sm" wrap="nowrap">
-       
         {onStartBenchmark && (
           <Button
             bg="#3b5bdb"

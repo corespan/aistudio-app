@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import {
   Box,
   Center,
@@ -32,19 +32,86 @@ const rgba = (hex: string, alpha: number) => {
 const fmtNum = (v: number | null, unit = '') =>
   v == null ? '—' : `${v.toLocaleString(undefined, { maximumFractionDigits: 2 })}${unit}`
 
-const runTooltipHtml = (run: BenchmarkRun, accentColor: string) => `
-  <div style="min-width:190px">
-    <div style="font-weight:700;color:${accentColor};margin-bottom:4px">${run.model || '—'}</div>
-    <div>GPU: <b>${normalizeGpuType(run.gpuType) ?? '—'}</b></div>
-    <div>GPU Count: <b>${run.gpuCount ?? '—'}</b></div>
-    <div>Precision: <b>${run.precision || '—'}</b></div>
-    <div>Concurrency: <b>${run.concurrency ?? '—'}</b></div>
-    <div style="margin-top:6px">Throughput: <b>${fmtNum(run.throughput, ' tok/s')}</b></div>
-    <div>TTFT: <b>${fmtNum(run.ttft, ' ms')}</b></div>
-    <div>TPOT: <b>${fmtNum(run.tpot, ' ms')}</b></div>
-    <div>E2EL: <b>${fmtNum(run.e2el, ' ms')}</b></div>
-  </div>
+// Short, readable timestamp — matches the format used in the results table.
+const fmtTime = (raw: string) => {
+  const ms = Date.parse(raw)
+  if (Number.isNaN(ms)) return '—'
+  return new Date(ms).toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+const STATUS_TOOLTIP_COLOR: Record<string, string> = {
+  success: 'var(--mantine-color-teal-6)',
+  completed: 'var(--mantine-color-teal-6)',
+  running: 'var(--mantine-color-blue-6)',
+  'in progress': 'var(--mantine-color-blue-6)',
+  fail: 'var(--mantine-color-red-6)',
+  failed: 'var(--mantine-color-red-6)',
+  pending: 'var(--mantine-color-gray-6)',
+}
+
+// One label/value table row. A plain HTML <table> keeps label/value columns
+// reliably aligned inside the tooltip's floating DOM, unlike flex in ECharts.
+const row = (label: string, value: string) => `
+  <tr>
+    <td style="padding:1px 10px 1px 0;color:var(--mantine-color-dimmed);white-space:nowrap">${label}</td>
+    <td style="padding:1px 0;font-weight:600;text-align:right;white-space:nowrap">${value}</td>
+  </tr>
 `
+
+const sectionLabel = (text: string) => `
+  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;
+              color:var(--mantine-color-dimmed);margin:8px 0 3px">${text}</div>
+`
+
+// Full record for the hovered run, grouped into Configuration / Performance /
+// Details sections so every captured field is visible and easy to scan.
+const runTooltipHtml = (run: BenchmarkRun, accentColor: string) => {
+  const statusColor =
+    STATUS_TOOLTIP_COLOR[run.status?.toLowerCase()] ?? 'var(--mantine-color-dimmed)'
+
+  return `
+    <div style="min-width:230px;font-size:12px;line-height:1.5">
+      <div style="font-weight:700;font-size:13px;color:${accentColor};
+                  padding-bottom:6px;border-bottom:1px solid rgba(128,128,128,.25)">
+        ${run.model || 'Unknown model'}
+      </div>
+
+      ${sectionLabel('Configuration')}
+      <table style="width:100%;border-collapse:collapse">
+        ${row('GPU', normalizeGpuType(run.gpuType) ?? '—')}
+        ${row('GPU Count', run.gpuCount != null ? String(run.gpuCount) : '—')}
+        ${row('Precision', run.precision || '—')}
+        ${row('Concurrency', run.concurrency != null ? String(run.concurrency) : '—')}
+      </table>
+
+      ${sectionLabel('Performance')}
+      <table style="width:100%;border-collapse:collapse">
+        ${row('Throughput', fmtNum(run.throughput, ' tok/s'))}
+        ${row('TTFT', fmtNum(run.ttft, ' ms'))}
+        ${row('TPOT', fmtNum(run.tpot, ' ms'))}
+        ${row('E2EL', fmtNum(run.e2el, ' ms'))}
+      </table>
+
+      ${sectionLabel('Details')}
+      <table style="width:100%;border-collapse:collapse">
+        ${row('Run ID', run.runId || '—')}
+        ${row('Node', run.machineIp || '—')}
+        <tr>
+          <td style="padding:1px 10px 1px 0;color:var(--mantine-color-dimmed);white-space:nowrap">Status</td>
+          <td style="padding:1px 0;font-weight:600;text-align:right;color:${statusColor};white-space:nowrap">
+            ${run.status || '—'}
+          </td>
+        </tr>
+        ${row('Time', fmtTime(run.timestamp))}
+      </table>
+    </div>
+  `
+}
 
 export const BenchmarkMetricChart = () => {
   const { data } = useBenchmarks()
@@ -75,11 +142,16 @@ export const BenchmarkMetricChart = () => {
   // Stable GPU → color assignment computed from *all* rows (not just the ones
   // plottable for the current metric), so a given GPU keeps the same color no
   // matter which metric tab is selected. Doubles as the series panel's list.
-  const gpuColorEntries = useMemo(() => {
-    const rows = data ?? []
-    const gpuTypes = [...new Set(rows.map((r) => normalizeGpuType(r.gpuType)).filter((g): g is string => !!g))].sort()
-    return gpuTypes.map((gpu) => ({ gpu, color: colorForGpuType(gpu) }))
-  }, [data])
+  // Recomputed on every render (no useMemo) so it always reflects the latest
+  // rows straight from the endpoint — nothing is cached between renders.
+  const rowsForColors = data ?? []
+  const gpuColorEntries = [
+    ...new Set(
+      rowsForColors.map((r) => normalizeGpuType(r.gpuType)).filter((g): g is string => !!g),
+    ),
+  ]
+    .sort()
+    .map((gpu) => ({ gpu, color: colorForGpuType(gpu) }))
   const colorForGpu = (gpu: string) => colorForGpuType(gpu)
 
   const visiblePanelEntries = gpuColorEntries.filter(({ gpu }) =>
@@ -89,18 +161,17 @@ export const BenchmarkMetricChart = () => {
   // Whether the *selected* metric has anything plottable. Rows can exist while the
   // chosen metric is null for all of them (e.g. TTFT when the workload didn't
   // report it) — in that case we show an empty state instead of a blank chart.
-  const hasData = useMemo(() => {
+  const hasData = (() => {
     const rows = data ?? []
     const meta = CHART_METRICS.find((m) => m.key === metric)!
     return meta.kind === 'category'
       ? rows.some((r) => r.concurrency != null && r.precision)
       : rows.some((r) => r.concurrency != null && r[metric] != null)
-  }, [data, metric])
+  })()
 
-  // Rebuild the ECharts option whenever the rows, metric, theme, or panel
-  // controls change. CoreChart's effect calls setOption on every new `option`,
-  // so this is the single source that drives the redraw.
-  const option = useMemo<EChartsOption>(() => {
+  // Rebuilt on every render, straight from `data` — no memoization, so the
+  // chart always reflects exactly what the endpoint returned.
+  const option = ((): EChartsOption => {
     const rows = data ?? []
     const meta = CHART_METRICS.find((m) => m.key === metric)!
 
@@ -114,6 +185,13 @@ export const BenchmarkMetricChart = () => {
 
     const tooltip = {
       trigger: 'axis' as const,
+      // Render into <body> instead of the chart's own container: the chart sits
+      // inside a Card (Mantine clips Card content to its rounded corners via
+      // `overflow: hidden`), which was cutting the tooltip off / letting sibling
+      // panels sit on top of it whenever a point was hovered near an edge.
+      appendToBody: true,
+      confine: false,
+      z: 10000,
       backgroundColor: isDark ? 'rgba(26,27,30,0.95)' : 'rgba(255,255,255,0.95)',
       borderColor: neutralAccent,
       borderWidth: 1,
@@ -306,7 +384,7 @@ export const BenchmarkMetricChart = () => {
       yAxis: { type: 'value', ...yAxisBase },
       series,
     }
-  }, [data, metric, isDark, hiddenGpus, showLabels])
+  })()
 
   return (
     <Box h="100%" style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
@@ -359,18 +437,11 @@ export const BenchmarkMetricChart = () => {
                 onChange={(e) => setSearch(e.currentTarget.value)}
               />
 
-              <Box
-                p={6}
-                style={{
-                  flex: '1 1 auto',
-                  minHeight: 0,
-                  borderRadius: 12,
-                  border: '1px solid var(--app-shell-border-color)',
-                  background: 'var(--core-surface-1)',
-                }}
-              >
-                <ScrollArea h="100%" scrollbarSize={5} type="scroll">
-                  <Stack gap={6}>
+              <Divider />
+
+              <Box style={{ flex: '1 1 auto', minHeight: 0 }}>
+                <ScrollArea h="100%" scrollbarSize={5} type="scroll" offsetScrollbars>
+                  <Stack gap={6} py={2}>
                     {visiblePanelEntries.map(({ gpu, color }) => {
                       const isHidden = hiddenGpus.has(gpu)
                       return (
@@ -384,7 +455,9 @@ export const BenchmarkMetricChart = () => {
                             width: '100%',
                             borderRadius: 10,
                             border: '1px solid var(--app-shell-border-color)',
-                            background: isHidden ? 'var(--mantine-color-body)' : 'var(--mantine-color-default)',
+                            background: isHidden
+                              ? 'var(--mantine-color-body)'
+                              : 'var(--mantine-color-default)',
                             opacity: isHidden ? 0.72 : 1,
                           }}
                         >
@@ -406,7 +479,6 @@ export const BenchmarkMetricChart = () => {
                                 {gpu.toUpperCase()}
                               </Text>
                             </Group>
-                           
                           </Group>
                         </UnstyledButton>
                       )
@@ -422,7 +494,7 @@ export const BenchmarkMetricChart = () => {
 
               <Divider />
 
-              <Stack gap={6}>
+              <Stack gap={6} pt={2}>
                 <Switch
                   label="Show labels"
                   size="xs"

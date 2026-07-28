@@ -1,6 +1,12 @@
 import { Card, Paper, ScrollArea, Select, type CSSVariablesResolver } from '@mantine/core'
 import type { ComponentType } from 'react'
-import { IconBrandPython, IconChartBar, IconInfoCircle, type IconProps } from '@tabler/icons-react'
+import {
+  IconArticle,
+  IconBrandPython,
+  IconChartBar,
+  IconInfoCircle,
+  type IconProps,
+} from '@tabler/icons-react'
 
 const RESOLVER: CSSVariablesResolver = (theme) => ({
   variables: {},
@@ -76,7 +82,7 @@ const REPO_URL = 'https://github.com/corespan/aistudio-app'
 const TOP_GAP = 12
 
 // AppLayout
-type SectionKey = 'benchmarks' | 'jupyter' | 'about'
+type SectionKey = 'benchmarks' | 'jupyter' | 'blogs' | 'about'
 
 type Section = {
   key: SectionKey
@@ -97,6 +103,7 @@ const NAV_GROUPS: NavGroup[] = [
     children: [
       { key: 'benchmarks', label: 'Benchmarks', icon: IconChartBar },
       { key: 'jupyter', label: 'Launch Jupyter', icon: IconBrandPython },
+      { key: 'blogs', label: 'Blogs', icon: IconArticle },
       { key: 'about', label: 'About Us', icon: IconInfoCircle },
     ],
   },

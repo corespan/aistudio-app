@@ -1,4 +1,14 @@
-import { Badge, Card, Group, SimpleGrid, Skeleton, Text, ThemeIcon } from '@mantine/core'
+import {
+  Badge,
+  Card,
+  Group,
+  SimpleGrid,
+  Skeleton,
+  Text,
+  ThemeIcon,
+  Tooltip,
+  useMantineColorScheme,
+} from '@mantine/core'
 import {
   IconActivityHeartbeat,
   IconBolt,
@@ -20,6 +30,81 @@ const fmt = (n: number | null, digits = 1): string =>
     ? '—'
     : new Intl.NumberFormat(undefined, { maximumFractionDigits: n >= 100 ? 0 : digits }).format(n)
 
+// The row whose value for `sel` is nearest an average/aggregate — used so an
+// "Avg" card can still point at one concrete run in its hover tooltip.
+const closestTo = (
+  rows: BenchmarkRun[],
+  sel: (r: BenchmarkRun) => number | null,
+  target: number | null,
+): BenchmarkRun | undefined => {
+  if (target == null) return undefined
+  return rows
+    .filter((r) => sel(r) != null)
+    .sort((a, b) => Math.abs((sel(a) ?? 0) - target) - Math.abs((sel(b) ?? 0) - target))[0]
+}
+
+// Same neutral chrome as the results chart's hover tooltip (BenchmarkMetricChart's
+// `tooltip`/`runTooltipHtml`) — background/border adapt to the color scheme, body
+// text uses the same muted foreground, and labels use Mantine's `dimmed` color.
+const tooltipChrome = (isDark: boolean) => ({
+  bg: isDark ? 'rgba(26,27,30,0.95)' : 'rgba(255,255,255,0.95)',
+  border: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
+  text: isDark ? '#c1c2c5' : '#495057',
+})
+
+// Every metric for the single run behind a card's number, shown on hover so
+// the other three metrics for that run are one glance away.
+const RunTooltip = ({
+  run,
+  accentColor,
+  textColor,
+}: {
+  run: BenchmarkRun
+  accentColor: string
+  textColor: string
+}) => (
+  <div style={{ fontSize: 12, lineHeight: 1.5, color: textColor }}>
+    <div
+      style={{
+        fontWeight: 700,
+        fontSize: 13,
+        color: accentColor,
+        paddingBottom: 6,
+        marginBottom: 4,
+        borderBottom: '1px solid rgba(128,128,128,.25)',
+      }}
+    >
+      {run.model || 'Unknown model'}
+    </div>
+    {(
+      [
+        ['Throughput', fmt(run.throughput), 'tok/s'],
+        ['TTFT', fmt(run.ttft, 2), 'ms'],
+        ['TPOT', fmt(run.tpot), 'ms'],
+        ['Latency (E2EL)', fmt(run.e2el, 2), 'ms'],
+        ['Concurrency', fmt(run.concurrency, 0), ''],
+        ['GPU', run.gpuType || '—', ''],
+        ['GPU Count', fmt(run.gpuCount, 0), ''],
+        ['Precision', run.precision || '—', ''],
+        ['Server', run.serverName || '—', ''],
+        ['Run ID', run.runId || '—', ''],
+        ['Node', run.machineIp || '—', ''],
+      ] as const
+    ).map(([label, value, unit]) => (
+      <div
+        key={label}
+        style={{ display: 'flex', justifyContent: 'space-between', gap: 16, whiteSpace: 'nowrap' }}
+      >
+        <span style={{ color: 'var(--mantine-color-dimmed)' }}>{label}</span>
+        <span style={{ fontWeight: 600 }}>
+          {value}
+          {unit ? ` ${unit}` : ''}
+        </span>
+      </div>
+    ))}
+  </div>
+)
+
 /**
  * Summary stat cards derived from the (filtered) benchmark result set: best and
  * average throughput, average TTFT, lowest end-to-end latency, and average TPOT.
@@ -27,6 +112,8 @@ const fmt = (n: number | null, digits = 1): string =>
  */
 export const BenchmarkKpiCards = () => {
   const { data, isLoading } = useBenchmarks()
+  const { colorScheme } = useMantineColorScheme()
+  const chrome = tooltipChrome(colorScheme === 'dark')
   const rows = data ?? []
 
   const throughputs = nums(rows, (r) => r.throughput)
@@ -40,7 +127,15 @@ export const BenchmarkKpiCards = () => {
     .filter((r) => r.throughput != null)
     .sort((a, b) => (b.throughput ?? 0) - (a.throughput ?? 0))[0]
   const lowestLatency = e2els.length ? Math.min(...e2els) : null
+  const lowestLatencyRow = rows
+    .filter((r) => r.e2el != null)
+    .sort((a, b) => (a.e2el ?? 0) - (b.e2el ?? 0))[0]
   const peakConcurrency = concurrencies.length ? Math.max(...concurrencies) : null
+  const peakConcurrencyRow = rows
+    .filter((r) => r.concurrency != null)
+    .sort((a, b) => (b.concurrency ?? 0) - (a.concurrency ?? 0))[0]
+  const avgTtftRow = closestTo(rows, (r) => r.ttft, avg(ttfts))
+  const avgTpotRow = closestTo(rows, (r) => r.tpot, avg(tpots))
 
   const kpis: BenchmarkKpi[] = [
     {
@@ -52,6 +147,7 @@ export const BenchmarkKpiCards = () => {
       hint: '↑ higher is better',
       color: 'teal',
       Icon: IconBolt,
+      sourceRow: bestRow,
     },
     {
       key: 'concurrency',
@@ -60,6 +156,7 @@ export const BenchmarkKpiCards = () => {
       caption: 'max concurrent requests',
       color: 'indigo',
       Icon: IconUsersGroup,
+      sourceRow: peakConcurrencyRow,
     },
     {
       key: 'ttft',
@@ -70,6 +167,7 @@ export const BenchmarkKpiCards = () => {
       hint: '↓ lower is better',
       color: 'blue',
       Icon: IconClockBolt,
+      sourceRow: avgTtftRow,
     },
     {
       key: 'latency',
@@ -80,6 +178,7 @@ export const BenchmarkKpiCards = () => {
       hint: '↓ lower is better',
       color: 'grape',
       Icon: IconActivityHeartbeat,
+      sourceRow: lowestLatencyRow,
     },
     {
       key: 'tpot',
@@ -90,57 +189,82 @@ export const BenchmarkKpiCards = () => {
       hint: '↓ lower is better',
       color: 'cyan',
       Icon: IconGauge,
+      sourceRow: avgTpotRow,
     },
   ]
 
   return (
     <SimpleGrid cols={{ base: 1, xs: 2, sm: 3, lg: 5 }} spacing="md">
-      {kpis.map((kpi) => (
-        <Card key={kpi.key} withBorder radius="md" padding="lg" shadow="sm">
-          <Group justify="space-between" align="flex-start" wrap="nowrap">
-            <ThemeIcon
-              size={44}
-              radius="md"
-              variant="gradient"
-              gradient={{ from: `${kpi.color}.7`, to: `${kpi.color}.4`, deg: 135 }}
-            >
-              <kpi.Icon size={22} stroke={1.9} />
-            </ThemeIcon>
-            {kpi.hint && (
-              <Badge variant="light" color={kpi.color} size="sm" radius="sm">
-                {kpi.hint}
-              </Badge>
-            )}
-          </Group>
+      {kpis.map((kpi) => {
+        const card = (
+          <Card key={kpi.key} withBorder radius="md" padding="lg" shadow="sm">
+            <Group justify="space-between" align="flex-start" wrap="nowrap">
+              <ThemeIcon
+                size={44}
+                radius="md"
+                variant="gradient"
+                gradient={{ from: `${kpi.color}.7`, to: `${kpi.color}.4`, deg: 135 }}
+              >
+                <kpi.Icon size={22} stroke={1.9} />
+              </ThemeIcon>
+              {kpi.hint && (
+                <Badge variant="light" color={kpi.color} size="sm" radius="sm">
+                  {kpi.hint}
+                </Badge>
+              )}
+            </Group>
 
-          <Text mt="md" size="xs" fw={700} tt="uppercase" c="dimmed">
-            {kpi.label}
-          </Text>
-
-          <Group gap={6} align="baseline" wrap="nowrap" mt={2}>
-            {isLoading ? (
-              <Skeleton height={30} width={80} radius="sm" mt={4} />
-            ) : (
-              <>
-                <Text fz={32} fw={800} lh={1}>
-                  {kpi.value}
-                </Text>
-                {kpi.unit && kpi.value !== '—' && (
-                  <Text component="span" c={kpi.color} fw={700} size="sm">
-                    {kpi.unit}
-                  </Text>
-                )}
-              </>
-            )}
-          </Group>
-
-          {kpi.caption && (
-            <Text mt={6} size="xs" c="dimmed" truncate>
-              {kpi.caption}
+            <Text mt="md" size="xs" fw={700} tt="uppercase" c="dimmed">
+              {kpi.label}
             </Text>
-          )}
-        </Card>
-      ))}
+
+            <Group gap={6} align="baseline" wrap="nowrap" mt={2}>
+              {isLoading ? (
+                <Skeleton height={30} width={80} radius="sm" mt={4} />
+              ) : (
+                <>
+                  <Text fz={32} fw={800} lh={1}>
+                    {kpi.value}
+                  </Text>
+                  {kpi.unit && kpi.value !== '—' && (
+                    <Text component="span" c={kpi.color} fw={700} size="sm">
+                      {kpi.unit}
+                    </Text>
+                  )}
+                </>
+              )}
+            </Group>
+
+            {kpi.caption && (
+              <Text mt={6} size="xs" c="dimmed" truncate>
+                {kpi.caption}
+              </Text>
+            )}
+          </Card>
+        )
+
+        if (!kpi.sourceRow) return card
+
+        return (
+          <Tooltip
+            key={kpi.key}
+            label={
+              <RunTooltip
+                run={kpi.sourceRow}
+                accentColor={`var(--mantine-color-${kpi.color}-6)`}
+                textColor={chrome.text}
+              />
+            }
+            position="bottom"
+            withArrow
+            color={chrome.bg}
+            events={{ hover: true, focus: true, touch: true }}
+            styles={{ tooltip: { border: `1px solid ${chrome.border}`, padding: '8px 12px' } }}
+          >
+            {card}
+          </Tooltip>
+        )
+      })}
     </SimpleGrid>
   )
 }

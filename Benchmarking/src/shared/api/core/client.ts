@@ -29,7 +29,7 @@ function applyMiddlewares(middlewares: Middleware[], core: Handler): Handler {
 // Core fetch handler
 function coreHandler(config: ApiClientConfig, baseUrl: string): Handler {
   return async (req) => {
-    const { url, params, body, headers: extraHeaders, method, ...rest } = req
+    const { url, params, body, headers: extraHeaders, method, cache, ...rest } = req
 
     const headers = new Headers({
       'Content-Type': 'application/json',
@@ -42,6 +42,12 @@ function coreHandler(config: ApiClientConfig, baseUrl: string): Handler {
       ...rest,
       method,
       headers,
+      // Bypass the browser's HTTP cache by default — every call goes to the
+      // network. React Query already governs when to refetch (see
+      // useBenchmarks' staleTime/gcTime: 0); this stops a Cache-Control header
+      // from the backend or an intermediate proxy from serving a stale body
+      // underneath that. Callers can still opt into caching via `cache: ...`.
+      cache: cache ?? 'no-store',
       body: body as BodyInit | undefined,
     })
   }

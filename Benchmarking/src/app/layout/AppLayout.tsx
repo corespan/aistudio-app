@@ -18,6 +18,7 @@ import {
   IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
+  IconChevronUp,
   IconLogout,
   IconSettings,
   IconUserCircle,
@@ -27,8 +28,10 @@ import { AppFooter } from '@/app/layout/AppFooter'
 import { CoreIcon } from '@/shared/ui'
 import { Benchmarks } from '@/features/benchmarks/Benchmarks'
 import { LaunchJupyter } from '@/features/benchmarks/components/LaunchJupyter'
+import { JupyterUrlsMenuItems } from '@/features/benchmarks/components/JupyterUrlsMenu'
 import { DbHealthIndicator } from '@/features/benchmarks/components/DbHealthIndicator'
 import { AboutUs } from '@/features/about/AboutUs'
+import { BlogsPage } from '@/features/blogs/BlogsPage'
 import {
   HEADER_HEIGHT,
   NAV_GROUPS,
@@ -43,6 +46,9 @@ export const AppLayout = () => {
   // Benchmarks is the default landing section — it hosts the existing UI.
   const [active, setActive] = useState<SectionKey>('benchmarks')
   const [isNavbarCollapsed, setIsNavbarCollapsed] = useState(false)
+  // Controlled so the whole Launch Jupyter row can toggle it (not just the
+  // chevron) and so the chevron's own up/down state can reflect it.
+  const [jupyterMenuOpened, setJupyterMenuOpened] = useState(false)
   // Placeholder until benchmarks wires up auth; composer derives this from the token.
   const username = 'User'
 
@@ -59,6 +65,8 @@ export const AppLayout = () => {
         return <Benchmarks />
       case 'jupyter':
         return <LaunchJupyter />
+      case 'blogs':
+        return <BlogsPage />
       case 'about':
         return <AboutUs />
     }
@@ -88,19 +96,83 @@ export const AppLayout = () => {
       items.push(
         ...group.children.map((child) => {
           const isActive = active === child.key
+          const isJupyter = child.key === 'jupyter'
+          const showChevron = isJupyter && !isNavbarCollapsed
+
+          const navLink = (
+            <NavLink
+              id={child.key}
+              label={!isNavbarCollapsed ? <Text size="sm">{child.label}</Text> : ''}
+              leftSection={<CoreIcon icon={<child.icon />} size={18} />}
+              rightSection={
+                showChevron &&
+                (jupyterMenuOpened ? (
+                  <IconChevronUp size={14} stroke={1.8} />
+                ) : (
+                  <IconChevronDown size={14} stroke={1.8} />
+                ))
+              }
+              childrenOffset={16}
+              active={isActive}
+              variant={colorScheme === 'light' ? 'filled' : 'light'}
+              onClick={() => setActive(child.key)}
+              h={38}
+              noWrap
+            />
+          )
+
+          // Launch Jupyter gets an extra dropdown off the sidebar row itself: a
+          // quick-access list of every known Jupyter Lab URL, so you don't have
+          // to open the page just to grab a link.
+          if (isJupyter) {
+            if (isNavbarCollapsed) {
+              // Collapsed navbar has no label/chevron to click, so the dropdown
+              // opens on hover instead (click-hover keeps it keyboard accessible).
+              return (
+                <Menu
+                  key={child.key}
+                  trigger="click-hover"
+                  openDelay={100}
+                  closeDelay={150}
+                  shadow="md"
+                  width={280}
+                  position="right-start"
+                  withinPortal
+                >
+                  <Menu.Target>{navLink}</Menu.Target>
+                  <Menu.Dropdown>
+                    <Menu.Label>Jupyter Lab URLs</Menu.Label>
+                    <JupyterUrlsMenuItems />
+                  </Menu.Dropdown>
+                </Menu>
+              )
+            }
+
+            // Expanded navbar: the whole row is the toggle (not just the
+            // chevron) — Menu is controlled so the chevron's direction always
+            // matches whether the dropdown is actually open.
+            return (
+              <Menu
+                key={child.key}
+                opened={jupyterMenuOpened}
+                onChange={setJupyterMenuOpened}
+                shadow="md"
+                width={300}
+                position="right-start"
+                withinPortal
+              >
+                <Menu.Target>{navLink}</Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Label>Jupyter Lab URLs</Menu.Label>
+                  <JupyterUrlsMenuItems />
+                </Menu.Dropdown>
+              </Menu>
+            )
+          }
+
           return (
             <Tooltip key={child.key} label={child.label} disabled={!isNavbarCollapsed}>
-              <NavLink
-                id={child.key}
-                label={!isNavbarCollapsed ? <Text size="sm">{child.label}</Text> : ''}
-                leftSection={<CoreIcon icon={<child.icon />} size={18} />}
-                childrenOffset={16}
-                active={isActive}
-                variant={colorScheme === 'light' ? 'filled' : 'light'}
-                onClick={() => setActive(child.key)}
-                h={38}
-                noWrap
-              />
+              {navLink}
             </Tooltip>
           )
         }),
@@ -149,12 +221,10 @@ export const AppLayout = () => {
                   </Flex>
                 </Flex>
 
-
                 <Box mt={8} flex={1} mih={0} style={{ overflowY: 'auto' }}>
                   {renderMenuItems(NAV_GROUPS)}
                 </Box>
               </Stack>
-             
             </Stack>
           </Stack>
         </AppShell.Navbar>

@@ -5,6 +5,4 @@ type PageShellProps = {
   children: ReactNode
 }
 
-export const PageShell = ({ children }: PageShellProps) => (
-  <Box h="100%">{children}</Box>
-)
+export const PageShell = ({ children }: PageShellProps) => <Box h="100%">{children}</Box>

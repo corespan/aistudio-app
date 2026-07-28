@@ -23,6 +23,7 @@ export type BenchmarkRun = {
   runId: string
   model: string
   machineIp: string
+  serverName: string
   gpuType: string
   gpuCount: number | null
   benchmarkType: string
@@ -146,6 +147,18 @@ export type JupyterRunStore = {
   reset: () => void
 }
 
+// components/JupyterInstancesTable — GET /api/v1/jupyter/instances
+/** A previously-launched Jupyter notebook server, as listed by the backend. */
+export type JupyterInstance = {
+  taskId: string
+  /** e.g. "READY", "PENDING", "FAILED" — backend-defined, not a closed enum here. */
+  state: string
+  nodeIp: string
+  url: string
+  createdAt: string
+  updatedAt: string
+}
+
 // store/useBenchmarkFiltersStore
 /**
  * Active table filters, keyed by the exact `/api/v1/benchmarks` query-param names
@@ -241,6 +254,8 @@ export type BenchmarkKpi = {
   /** Mantine palette color name driving the icon gradient, badge, and unit. */
   color: string
   Icon: ComponentType<IconProps>
+  /** The run this card's number was derived from — shown in full on hover. */
+  sourceRow?: BenchmarkRun
 }
 
 // components/LogStreamView

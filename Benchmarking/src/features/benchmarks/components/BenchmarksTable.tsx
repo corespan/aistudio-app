@@ -1,16 +1,17 @@
-import { useMemo } from 'react'
 import { Badge, Group, Tooltip } from '@mantine/core'
 import { CoreTable, useCoreTable } from '@/shared/ui'
 import type { ColumnDef } from '@tanstack/react-table'
 import type { BenchmarkRun } from '../types'
 import { useBenchmarks } from '../data/queries/useBenchmarks'
-import { useRunStreamsStore } from '../store/useRunStreamsStore'
-import { toRunStreamRow } from '../data/selectors/toRunStreamRow'
 import { ViewProgressButton } from './ViewProgressButton'
 import { DeleteRunButton } from './DeleteRunButton'
 import { BENCHMARKS_TABLE_STATUS_COLORS } from '../constants'
 
 const formatMetric = (value: number | null) => (value == null ? '—' : value.toLocaleString())
+
+// Same "—" placeholder convention as every other column — a blank/null string
+// from the API should render as the dash, not an empty cell.
+const formatText = (value: string | null | undefined) => (value ? value : '—')
 
 // Show only month, day, and time — the year and seconds add noise without
 // adding meaning for a list of recent runs. The full timestamp stays available
@@ -36,9 +37,34 @@ const EMPTY_ROWS: BenchmarkRun[] = []
 
 const columns: ColumnDef<BenchmarkRun>[] = [
   { accessorKey: 'runId', header: 'Run ID' },
-  { accessorKey: 'model', header: 'Model' },
-  { accessorKey: 'gpuType', header: 'GPU Type' },
-  { accessorKey: 'precision', header: 'Precision' },
+  {
+    accessorKey: 'model',
+    header: 'Model',
+    cell: ({ getValue }) => formatText(getValue<string | null | undefined>()),
+  },
+  {
+    accessorKey: 'serverName',
+    header: 'Chasis',
+    cell: ({ getValue }) => {
+      const server = getValue<string>()
+      if (!server || server === '—') return '—'
+      return (
+        <Badge variant="filled" color="grape" size="sm" radius="sm">
+          {server}
+        </Badge>
+      )
+    },
+  },
+  {
+    accessorKey: 'gpuType',
+    header: 'GPU Type',
+    cell: ({ getValue }) => formatText(getValue<string | null | undefined>()),
+  },
+  {
+    accessorKey: 'precision',
+    header: 'Precision',
+    cell: ({ getValue }) => formatText(getValue<string | null | undefined>()),
+  },
   {
     accessorKey: 'throughput',
     header: 'Throughput (tokens/s)',
@@ -66,7 +92,10 @@ const columns: ColumnDef<BenchmarkRun>[] = [
       const status = getValue<string>()
       if (!status) return '—'
       return (
-        <Badge variant="light" color={BENCHMARKS_TABLE_STATUS_COLORS[status.toLowerCase()] ?? 'gray'}>
+        <Badge
+          variant="light"
+          color={BENCHMARKS_TABLE_STATUS_COLORS[status.toLowerCase()] ?? 'gray'}
+        >
           {status}
         </Badge>
       )
@@ -103,20 +132,12 @@ const columns: ColumnDef<BenchmarkRun>[] = [
 
 export const BenchmarksTable = () => {
   const { data, isFetching } = useBenchmarks()
-  const streams = useRunStreamsStore((s) => s.streams)
 
-  // Show runs started this session immediately — even before `/api/v1/benchmarks`
-  // returns them. The API record is authoritative (it carries metrics and the real
-  // status), so when a run appears in both, the API row wins and the synthetic
-  // in-progress row is dropped.
-  const rows = useMemo(() => {
-    const apiRows = data ?? EMPTY_ROWS
-    const knownIds = new Set(apiRows.map((row) => row.runId))
-    const pendingRows = Object.values(streams)
-      .filter((stream) => !knownIds.has(stream.taskId))
-      .map(toRunStreamRow)
-    return pendingRows.length ? [...pendingRows, ...apiRows] : apiRows
-  }, [data, streams])
+  // Exactly what `/api/v1/benchmarks` returns, in the exact order it comes
+  // back — no default sort, no locally-synthesized rows merged in. `EMPTY_ROWS`
+  // is a stable reference so a fresh `[]` each render doesn't livelock
+  // TanStack Table's auto-reset. Users can still click a column header to sort.
+  const rows = data ?? EMPTY_ROWS
 
   const table = useCoreTable<BenchmarkRun>({
     data: rows,
@@ -124,14 +145,17 @@ export const BenchmarksTable = () => {
     enablePagination: true,
     enableSorting: true,
     enableGlobalFilter: true,
-    // Default to most-recent-first; users can still re-sort any column.
-    initialState: { sorting: [{ id: 'timestamp', desc: true }] },
   })
 
-  return <CoreTable table={table} loading={isFetching}
-  withRowBorders
+  return (
+    <CoreTable
+      table={table}
+      loading={isFetching}
+      withRowBorders
       verticalSpacing="xs"
       horizontalSpacing="xs"
       enableFullscreen
-   emptyState="No benchmark runs yet" />
+      emptyState="No benchmark runs yet"
+    />
+  )
 }

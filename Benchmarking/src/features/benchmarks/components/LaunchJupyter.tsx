@@ -1,4 +1,4 @@
-import { Button, Card, Group, Stack } from '@mantine/core'
+import { Button, Card, Group, Stack, Text } from '@mantine/core'
 import { IconBrandPython } from '@tabler/icons-react'
 import { CoreForm, CoreTextInput, CoreIcon } from '@/shared/ui'
 import { PageShell } from '@/app/layout/PageShell'
@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { useLaunchJupyter } from '../data/queries/useLaunchJupyter'
 import { useJupyterRunStore } from '../store/useJupyterRunStore'
 import { LogStreamView } from './LogStreamView'
+import { JupyterInstancesTable } from './JupyterInstancesTable'
 import type { LaunchJupyterForm } from '../types'
 import { LAUNCH_JUPYTER_DEFAULTS } from '../constants'
 
@@ -27,11 +28,7 @@ export const LaunchJupyter = () => {
   // The run lives in the store, so it survives navigating away from this panel.
   const run = useJupyterRunStore((s) => s.run)
   const startRun = useJupyterRunStore((s) => s.startRun)
-  const markOpened = useJupyterRunStore((s) => s.markOpened)
   const reset = useJupyterRunStore((s) => s.reset)
-
-  const url = run?.url ?? null
-  const opened = run?.opened ?? false
 
   const handleSubmit = (data: LaunchJupyterForm) => {
     reset()
@@ -44,17 +41,6 @@ export const LaunchJupyter = () => {
         },
       },
     )
-  }
-
-  // Opening the tab from an async callback gets popup-blocked (no user gesture).
-  // Instead we surface a button once the URL is known; clicking it IS a gesture,
-  // so window.open is allowed.
-  const openNotebook = () => {
-    if (!url) return
-    window.open(url, '_blank', 'noopener,noreferrer')
-    // Disable the button — we've navigated using it. Persisted in the store so it
-    // stays disabled after switching tabs and coming back.
-    markOpened()
   }
 
   return (
@@ -89,18 +75,12 @@ export const LaunchJupyter = () => {
           </Card>
         )}
 
-        {/* Bottom action: disabled until the notebook URL arrives in the stream,
-            then enabled; disabled again once opened. */}
-        <Group justify="flex-end">
-          <Button
-            size="sm"
-            onClick={openNotebook}
-            disabled={!url || opened}
-            leftSection={<CoreIcon icon={<IconBrandPython />} size={16} />}
-          >
-            {opened ? 'Jupyter Lab Opened' : 'Open Jupyter Lab'}
-          </Button>
-        </Group>
+        <Card withBorder radius="md" p="lg">
+          <Stack gap="md">
+            <Text fw={600}>Jupyter Instances</Text>
+            <JupyterInstancesTable />
+          </Stack>
+        </Card>
       </Stack>
     </PageShell>
   )

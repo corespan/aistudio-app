@@ -18,3 +18,9 @@ export const benchmarkOptionKeys = {
 export const healthKeys = {
   all: ['health'] as const,
 }
+
+/** Query key factory for Jupyter (launch + instance listing). */
+export const jupyterKeys = {
+  all: ['jupyter'] as const,
+  instances: () => [...jupyterKeys.all, 'instances'] as const,
+}

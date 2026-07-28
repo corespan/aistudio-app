@@ -11,6 +11,11 @@ export const useBenchmarks = () => {
     queryKey: benchmarkOptionKeys.benchmarks(filters),
     queryFn: () => getBenchmarks(filters),
     select: toBenchmarkRows,
+    // Match main: rely on the app-wide defaults in queryClient.ts
+    // (staleTime: 30_000, refetchOnWindowFocus: false) instead of forcing a
+    // network call on every mount/focus.
+    staleTime: 20_000,
+    refetchOnWindowFocus: false,
     meta: {
       errorNotification: {
         id: 'benchmarks-error',
