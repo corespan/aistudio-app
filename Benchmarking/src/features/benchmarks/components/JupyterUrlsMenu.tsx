@@ -1,6 +1,7 @@
 import { Menu, Text } from '@mantine/core'
 import { IconExternalLink } from '@tabler/icons-react'
 import { useJupyterInstances } from '../data/queries/useJupyterInstances'
+import { maskIp } from '../lib/maskIp'
 
 /**
  * The Jupyter Lab URLs dropdown's content — every known instance (from GET
@@ -26,10 +27,10 @@ export const JupyterUrlsMenuItems = () => {
           onClick={() => window.open(row.url, '_blank', 'noopener,noreferrer')}
         >
           <Text size="sm" fw={600}>
-            {row.nodeIp}
+            {maskIp(row.nodeIp)}
           </Text>
           <Text size="xs" c="dimmed" truncate>
-            {row.url}
+            {maskIp(row.url)}
           </Text>
         </Menu.Item>
       ))}

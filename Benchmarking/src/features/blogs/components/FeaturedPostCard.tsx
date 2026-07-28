@@ -60,10 +60,13 @@ export const FeaturedPostCard = ({ post, onOpen }: FeaturedPostCardProps) => {
         }}
       >
         <Flex wrap="wrap" align="stretch">
+          {/* Cover panel stays a smaller accent strip (~1/4 of the card) so the
+              copy — title, excerpt, byline — gets the lion's share of the width,
+              matching how the grid cards let text run the full card width. */}
           <Box
             pos="relative"
             flex={1}
-            miw={280}
+            miw={220}
             mih={{ base: 200, sm: 320 }}
             style={{
               background: gradientBackground(style),
@@ -72,19 +75,19 @@ export const FeaturedPostCard = ({ post, onOpen }: FeaturedPostCardProps) => {
           >
             <Text
               fw={800}
-              fz={140}
+              fz={96}
               lh={1}
               c="white"
               pos="absolute"
-              bottom={-30}
-              left={20}
+              bottom={-20}
+              left={16}
               style={{ opacity: 0.14, fontFamily: 'monospace', pointerEvents: 'none' }}
             >
               01
             </Text>
 
             <CategoryIcon
-              size={220}
+              size={160}
               stroke={1}
               color="white"
               aria-hidden
@@ -143,7 +146,7 @@ export const FeaturedPostCard = ({ post, onOpen }: FeaturedPostCardProps) => {
             </Box>
           </Box>
 
-          <Stack gap="sm" p="xl" pt={{ base: 40, sm: 'xl' }} flex={1} miw={280} justify="center">
+          <Stack gap="sm" p="xl" pt={{ base: 40, sm: 'xl' }} flex={3} miw={280} justify="center">
             <Group gap="xs">
               <Badge variant="light" color={style.color} radius="sm" size="sm">
                 {post.category}
