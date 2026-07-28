@@ -3,6 +3,7 @@ import {
   IconGauge,
   IconLayersLinked,
   IconPercentage,
+  IconRobot,
   IconTopologyStar3,
 } from '@tabler/icons-react'
 import type { BlogCategory, BlogPost, CategoryStyle, ImpactStat } from './types'
@@ -12,6 +13,7 @@ export const BLOG_CATEGORIES: BlogCategory[] = [
   { label: 'All', icon: IconApps },
   { label: 'Benchmarking', icon: IconGauge },
   { label: 'Hardware & Topology', icon: IconTopologyStar3 },
+  { label: 'AI Assistant', icon: IconRobot },
 ]
 
 // Every category gets its own gradient + accent color, all from the Mantine
@@ -21,6 +23,7 @@ export const CATEGORY_STYLES: Record<string, CategoryStyle> = {
   All: { gradient: { from: 'gray.6', to: 'dark.4', deg: 135 }, color: 'gray' },
   Benchmarking: { gradient: { from: 'indigo.6', to: 'blue.7', deg: 135 }, color: 'indigo' },
   'Hardware & Topology': { gradient: { from: 'teal.6', to: 'cyan.7', deg: 135 }, color: 'teal' },
+  'AI Assistant': { gradient: { from: 'grape.6', to: 'violet.7', deg: 135 }, color: 'grape' },
 }
 
 export const CATEGORY_ICON_BY_LABEL = Object.fromEntries(
@@ -53,9 +56,10 @@ export const IMPACT_STATS: ImpactStat[] = [
 ]
 
 // Content sourced from the uploaded Corespan markdown articles: 01-BEN and
-// 02-BEN are merged into one combined read; 03-REA and 04-PCI stay separate.
-// No external image URLs anywhere — every cover and avatar is rendered from
-// Mantine primitives.
+// 02-BEN are merged into one combined read; 03-REA and 04-PCI stay separate;
+// 05-AI, 06-AI, and 07-AI (Parts 1-3 of one series, per their own frontmatter)
+// are merged into one combined read the same way 01/02 are. No external image
+// URLs anywhere — every cover and avatar is rendered from Mantine primitives.
 const AUTHOR = 'Corespan Systems'
 const AUTHOR_ROLE = 'Corespan Systems Engineering'
 
@@ -117,6 +121,31 @@ const POST_META: PostMeta[] = [
       'A Gen5 GPU does not speed up model load if the NVMe is stuck on Gen4 — the slowest link in the path always wins.',
       'The likely bottleneck on a shared-switch node is uplink oversubscription when GPUs and NVMe are all active at once.',
       'Topology tells you structure and feasibility; lspci -vv and live benchmarking confirm the actual numbers.',
+    ],
+  },
+  {
+    id: 'building-corespan-ai-assistant',
+    title: 'Building the Corespan AI Assistant: From Ingestion to Measured Answers',
+    excerpt:
+      'A three-part inside look at how the Corespan AI Assistant turns product docs, code, and the website into a searchable knowledge base, always grounds its answers in real sources, and is measured end-to-end so every change can be shown to help.',
+    category: 'AI Assistant',
+    tags: [
+      'ai-assistant',
+      'rag',
+      'ingestion',
+      'knowledge-base',
+      'retrieval',
+      'answers',
+      'evaluation',
+      'quality',
+    ],
+    date: '2026-07-28',
+    readMinutes: 12,
+    takeaways: [
+      'Ingestion loads content from code, docs, and the website, splits it along real structural boundaries (functions, sections, endpoints), and stores it two ways — a search index for meaning and a relationship map for connections.',
+      "Every question is checked, then always searched, before the assistant writes an answer — nothing is ever answered from the model's general memory alone.",
+      'Retrieved material is filtered for relevance before it reaches the answer step, and the assistant can loop back for another search when a first pass is not enough.',
+      'Search quality and answer quality are measured separately and continuously, so a regression traces back to a specific cause instead of a vague "it feels worse."',
     ],
   },
 ]

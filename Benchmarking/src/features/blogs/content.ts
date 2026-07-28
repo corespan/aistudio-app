@@ -671,4 +671,333 @@ export const POST_CHAPTERS: Record<string, BlogChapter[]> = {
       ],
     },
   ],
+  'building-corespan-ai-assistant': [
+    {
+      title: 'Part 1 — Getting Knowledge In',
+      sections: [
+        {
+          heading: 'Why ingestion comes first',
+          paragraphs: [
+            'The Corespan AI Assistant answers questions about our products, documentation, and codebase right on our site. Before it can answer anything, it needs a well-organized knowledge base to draw from — a process we call ingestion.',
+            'An assistant is only as good as the information it can find. If the knowledge going in is messy or badly organized, the answers coming out will be too, so we put real care into this step and it pays off everywhere downstream.',
+          ],
+        },
+        {
+          heading: 'The shape of the pipeline',
+          paragraphs: [
+            'At a high level, information flows in one direction, from raw sources to searchable knowledge. Every piece of content ends up in two places: a search index that finds information by meaning, and a relationship map that tracks how things connect — the two work together to give better answers than either could alone.',
+          ],
+          code: [
+            {
+              lines: [
+                'Sources (code, docs, website)',
+                '      -> Load the content',
+                '      -> Split it into small, meaningful pieces',
+                '      -> Tag each piece with useful labels',
+                '      -> Store it two ways:',
+                '           - a search index (to find pieces by meaning)',
+                '           - a relationship map (to find how pieces connect)',
+              ],
+            },
+          ],
+        },
+        {
+          heading: 'Where the knowledge comes from',
+          paragraphs: [
+            'We pull from three kinds of source, and keep them separate so the assistant can search the right one for a given question:',
+          ],
+          points: [
+            { text: 'Code repositories' },
+            { text: 'Technical documentation' },
+            { text: 'Our website' },
+          ],
+          callout: {
+            title: 'Always current',
+            text: 'Ingestion happens automatically. When code changes, that content is re-indexed; scheduled jobs re-crawl the website so the knowledge base keeps up with the live site. Nothing is a one-time load — the pipeline is designed to run regularly and stay current.',
+          },
+        },
+        {
+          heading: 'Splitting content the smart way',
+          paragraphs: [
+            'Before content can be searched, it has to be broken into smaller pieces. This is where a lot of assistants quietly lose quality. A naive approach just cuts every so many characters, which can slice a paragraph in half or split a heading from the text it belongs to. We split along the natural structure of the content instead:',
+          ],
+          points: [
+            {
+              term: 'Code',
+              text: 'is split along real boundaries, like whole functions and classes, so a piece is a complete, understandable unit rather than a random fragment.',
+            },
+            {
+              term: 'Documentation and web pages',
+              text: 'are split by section and topic, so each piece stays about one thing.',
+            },
+            {
+              term: 'API references',
+              text: 'are split so each endpoint becomes its own self-contained piece.',
+            },
+          ],
+          callout: {
+            title: 'Why structure beats size',
+            text: 'Splitting by structure means each piece is far more likely to be a complete thought, which is exactly what leads to a good answer later on.',
+          },
+        },
+        {
+          heading: 'Tagging each piece',
+          paragraphs: [
+            'Once the content is split, each piece is passed through a language model that reads it and adds a few useful labels. It pulls out the key names mentioned in the text — people, tools, concepts, and so on — and notes what the piece is really about (for example, whether it describes something Corespan offers versus general background).',
+            'These labels do two things: they make search more precise, and they feed the relationship map described below.',
+          ],
+        },
+        {
+          heading: 'Storing it two ways',
+          paragraphs: ['Each labeled piece is saved into two complementary indexes.'],
+          points: [
+            {
+              term: 'A search index (find by meaning)',
+              text: 'Lets the assistant search by meaning rather than exact words, so it can match a question to the right content even when the wording is completely different, while still catching exact terms like product names and error codes when they matter. Documentation is also tagged with its version, so the assistant can answer about a specific release instead of blending versions together.',
+            },
+            {
+              term: 'A relationship map (find by connection)',
+              text: 'Links each piece and the names it mentions into a map of points and connections. It gives the assistant the ability to follow connections — answering things like "what else references this?" or "where else is this mentioned?" — questions about how things relate, not just what they resemble.',
+            },
+          ],
+          callout: {
+            title: 'Search finds alike; the map finds linked',
+            text: 'This "best of both" search is what makes retrieval reliable, and it is the foundation for Part 2.',
+          },
+        },
+        {
+          heading: 'Kept current, automatically',
+          paragraphs: [
+            'The whole pipeline runs as a set of automated jobs, one for each kind of source, with each step — load, split, tag, store — handled separately. That gives us repeatable, observable runs and, most importantly, a knowledge base that refreshes itself as our products, docs, and code change. No one has to remember to update it.',
+          ],
+        },
+        {
+          heading: 'Why this matters',
+          paragraphs: [
+            'Every later decision about answer quality traces back to ingestion. Splitting by structure keeps ideas whole. Tagging makes search sharper and the relationship map possible. Storing content two ways means the assistant can search by meaning and by connection. And because it all runs automatically, the knowledge stays honest as Corespan evolves.',
+          ],
+          callout: {
+            title: 'Next in the series',
+            text: 'Part 2 — How the Assistant Answers, where we follow a question from the moment it is asked to the grounded, sourced answer that comes back.',
+          },
+        },
+      ],
+    },
+    {
+      title: 'Part 2 — How the Assistant Answers',
+      sections: [
+        {
+          heading: 'From knowledge base to answer',
+          paragraphs: [
+            'Part 1 covered how we build the knowledge base. This post is about what happens when someone actually asks a question — how it travels through the assistant and comes back as a clear, sourced answer.',
+            'The assistant is not a single step. It is a short, structured workflow where each step has one job, and the answer only moves forward when it is ready. That structure is what lets the assistant stay accurate and, just as importantly, admit when it does not know something instead of guessing.',
+          ],
+        },
+        {
+          heading: 'The steps at a glance',
+          paragraphs: ['Every question follows the same path:'],
+          code: [
+            {
+              lines: [
+                'Question',
+                '   -> Check the question (is it something we can help with?)',
+                '        - off-topic or a greeting -> a quick, direct reply',
+                '        - on-topic -> search the knowledge base',
+                '                        -> think about what was found',
+                '                             - need more? -> look deeper, then think again',
+                '                             - enough?    -> write the answer',
+                '                                              -> stream it back with sources',
+              ],
+            },
+          ],
+          callout: {
+            title: 'Two ideas that shape everything',
+            text: 'The assistant always searches before it answers, and it is never allowed to answer from thin air.',
+          },
+        },
+        {
+          heading: 'Staying in its lane',
+          paragraphs: [
+            'The assistant runs in a few different places — the public site, the documentation, the code view — and each version is focused on just that area. A documentation question searches only the documentation, for example. Keeping each version focused makes answers more on-point and faster, because there is less to search through.',
+          ],
+        },
+        {
+          heading: 'Checking the question first',
+          paragraphs: ['Every question is checked before anything else happens:'],
+          points: [
+            {
+              term: 'A greeting or an empty message',
+              text: '("hi", "thanks") gets a friendly, direct reply — no search needed.',
+            },
+            {
+              term: 'An off-topic question',
+              text: 'gets a polite redirect. The assistant decides whether the question has anything to do with Corespan, our products, or our field, and is smart about phrasing, so questions like "who are you?" or "how do you compare to others?" are correctly treated as fair game.',
+            },
+            { term: 'An on-topic question', text: 'moves on to search.' },
+          ],
+          callout: {
+            title: 'When unsure',
+            text: 'The assistant leans toward being helpful — it would rather attempt a borderline question than wrongly turn someone away.',
+          },
+        },
+        {
+          heading: 'Always search before answering',
+          paragraphs: [
+            "Every real question goes through a search of the knowledge base before the assistant writes anything. This is the single most important rule: the answer is built from information we actually have, not from the model's general memory.",
+            'The search works in two complementary ways at once — matching by meaning and matching by exact terms — then a second pass re-sorts the results so the most relevant material rises to the top. For documentation, the search also sticks to the right version so answers do not mix releases. And if someone asks a vague follow-up like "tell me more" while reading a page, the assistant uses the page they are on to figure out what "this" refers to.',
+          ],
+        },
+        {
+          heading: 'Keeping only what is relevant',
+          paragraphs: [
+            'Search returns the closest matches, but closest is not always useful. So before anything reaches the answer step, the assistant takes a second look and keeps only the pieces that genuinely help with the specific question — anything off-target is dropped.',
+          ],
+          callout: {
+            title: 'The main safeguard',
+            text: "This check is the assistant's main defense against confident-but-wrong answers. If nothing survives the check, the assistant does not improvise — it clearly says it does not have that information.",
+          },
+        },
+        {
+          heading: 'Thinking, and digging deeper when needed',
+          paragraphs: [
+            "The relevant material goes to the assistant's reasoning step, which decides one of two things:",
+          ],
+          points: [
+            { term: 'This is enough', text: 'write the answer.' },
+            { term: 'I need more', text: 'go look further.' },
+          ],
+          callout: {
+            title: 'Digging deeper',
+            text: 'When it needs more, it can run another targeted search, or follow the relationship map from Part 1 to answer connection-style questions like "what else references this?" To keep responses quick, the assistant limits how many times it will loop before it has to give an answer.',
+          },
+        },
+        {
+          heading: 'Answering, with sources',
+          paragraphs: [
+            'When the assistant is ready, it writes the answer and streams it back word by word so it feels responsive. Alongside the answer, it attaches a few sources — links to the material the answer was based on — so the reader can verify it. If the assistant could not actually answer, it drops the sources rather than attaching links to a non-answer.',
+          ],
+        },
+        {
+          heading: 'The throughline: never answer ungrounded',
+          paragraphs: [
+            'Every design choice points the same way. The assistant always searches first. It re-sorts and filters for what is genuinely relevant. It can dig deeper when a simple match is not enough. It keeps responses quick. And when there is nothing solid to stand on, it says so instead of guessing.',
+          ],
+          callout: {
+            title: 'Next in the series',
+            text: 'That discipline is what makes an assistant safe to put in front of customers, and it is exactly what we measure in Part 3, where we cover how we check answer quality and track it over time.',
+          },
+        },
+      ],
+    },
+    {
+      title: 'Part 3 — Measuring Answer Quality',
+      sections: [
+        {
+          heading: 'Why measuring is its own discipline',
+          paragraphs: [
+            'Part 1 built the knowledge base and Part 2 built the assistant that answers from it. This post covers the question that decides whether any of it is working: how good are the answers, and how do we know when a change makes them better or worse?',
+            'AI assistants are easy to demo and surprisingly hard to trust. A tweak that improves one kind of question can quietly break another, and reading a handful of answers will not tell you which. So we treat quality-checking as a built-in, automated part of the system rather than something we do by hand now and then.',
+          ],
+        },
+        {
+          heading: 'Two things to measure, not one',
+          paragraphs: [
+            'An answer can go wrong in two very different places, and a good check has to separate them:',
+          ],
+          ordered: true,
+          points: [
+            {
+              text: 'Did we find the right information? If the relevant material never shows up in the search results, no amount of clever wording can produce a good answer.',
+            },
+            {
+              text: 'Did we answer well with what we found? Even with the right information in hand, an assistant can still drift, over-explain, or answer a slightly different question.',
+            },
+          ],
+          callout: {
+            title: 'Why separate them',
+            text: 'Lumping these together hides problems. If answers are weak, we need to know whether to improve the search or the answering — so we measure each separately.',
+          },
+        },
+        {
+          heading: 'Checking the search',
+          paragraphs: [
+            'We keep a set of test questions, each paired with a known-good answer. For every one, we ask the live assistant and check what it found:',
+          ],
+          points: [
+            {
+              text: 'Did a relevant result show up near the top? The most important signal — if the right material is not in the top few results, nothing else matters.',
+            },
+            {
+              text: 'How highly was it ranked? We reward putting the right answer at the top, not just somewhere in the list.',
+            },
+            { text: 'How much of the needed material was found at all?' },
+          ],
+          callout: {
+            title: 'Speed, too',
+            text: 'We also track practical things on the same run, like how long answers take, so we watch quality and speed together.',
+          },
+        },
+        {
+          heading: 'Checking the answer',
+          paragraphs: [
+            "Search scores say nothing about the answer itself. For that, we use an automated approach where one AI model acts as a neutral grader of another's answers. It looks at four things, each catching a different kind of mistake:",
+          ],
+          points: [
+            {
+              text: 'Is the answer backed by the sources? Our main guard against the assistant making things up.',
+            },
+            {
+              text: 'Does it actually answer the question that was asked, rather than a nearby one?',
+            },
+            { text: 'Was the useful material ranked above the noise?' },
+            { text: 'Did the sources actually cover what a good answer needs?' },
+          ],
+          callout: {
+            title: 'One honest caveat',
+            text: 'Grades from an AI grader are directional, not exact. A high score does not mean an answer is provably "correct" — it means the grader found it well-supported and on-point. The real value is in comparison: run against run, change against change, on the same set of questions.',
+          },
+        },
+        {
+          heading: 'What a result looks like',
+          paragraphs: [
+            'Every check produces a simple scoreboard plus a question-by-question breakdown. The numbers below are illustrative examples to show how it reads, not real results:',
+          ],
+          table: {
+            headers: ['What we measure', 'Area', 'Example score'],
+            rows: [
+              ['Found a relevant result near the top', 'Search', '88%'],
+              ['Ranked it highly', 'Search', '0.79'],
+              ['Found enough of the needed material', 'Search', '0.83'],
+              ['Answer backed by the sources', 'Answer', '0.91'],
+              ['Answered the actual question', 'Answer', '0.87'],
+              ['Useful material ranked above noise', 'Answer', '0.84'],
+              ['Sources covered the answer', 'Answer', '0.80'],
+              ['Average response time', 'Speed', '2.1 s'],
+            ],
+          },
+          callout: {
+            title: 'Reading the numbers',
+            text: "Higher is better across the board (scores run from 0 to 1, except the top row, a percentage, and response time in seconds). The detailed breakdown then shows, for each question, whether the search hit, the assistant's actual answer, the known-good answer, and the sources it used — so a low score always traces back to a specific question and a specific cause.",
+          },
+        },
+        {
+          heading: 'Tracked over time, run automatically',
+          paragraphs: [
+            'The whole check runs automatically on a schedule and records its results to a dashboard, so we build up a history rather than a one-off snapshot. Each run also notes the setup it was measured under, so when we change something, we can line the new run up against the previous one and see exactly which numbers moved. A regression shows up as a dropped score right away, instead of surfacing weeks later as vague complaints.',
+            "Every run also posts a short, plain-language summary to the team's chat, each number explained in a few words, so people see results without opening anything.",
+          ],
+        },
+        {
+          heading: 'Why measuring closes the loop',
+          paragraphs: [
+            'Ingestion decides what the assistant can know. The answering workflow decides how it uses what it knows. Measuring is how we find out whether any given change actually helped, and it is what makes improving the first two safe. Separating search from answering tells us where a problem lives. The answer grades tell us whether responses are well-supported and on-target. And the run-to-run history gives every change a clear before-and-after.',
+          ],
+          callout: {
+            title: 'The throughline',
+            text: 'Together, they turn "the assistant feels better" into something we can actually show — which is the only honest way to improve something people rely on. This concludes the Corespan AI Assistant series: a knowledge base that keeps itself current, an assistant that always grounds its answers, and automated quality checks that catch every change. Measure it, ground it, and never ship on a hunch.',
+          },
+        },
+      ],
+    },
+  ],
 }
