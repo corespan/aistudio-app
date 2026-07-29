@@ -6,8 +6,8 @@ Corespan Fabric benchmarks.
 The application lives in the [`Benchmarking/`](Benchmarking) directory.
 
 
-**GitHub:** [github.com/corespan/aistudio-app](https://github.com/corespan/aistudio-app)
-  https://github.com/corespan/aistudio-cli
+**GitHub:** [github.com/corespan/aistudio-app](https://github.com/corespan/aistudio-app),
+  https://github.com/corespan/aistudio-cli,
   https://aistudio-app-iota.vercel.app/aistudio
 
 ---
