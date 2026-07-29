@@ -717,6 +717,13 @@ export const POST_CHAPTERS: Record<string, BlogChapter[]> = {
           },
         },
         {
+          heading: 'The full picture',
+          paragraphs: [
+            'Zooming out, here is the whole system end to end: the ingestion pipeline on the right turning raw sources into the two stores described above, and the agent execution flow on the left that a live question travels through — guardrail check, mandatory retrieval, the hybrid retriever, and the agent loop that decides whether it has enough to answer or needs another search pass.',
+          ],
+          diagram: 'agent-architecture',
+        },
+        {
           heading: 'Splitting content the smart way',
           paragraphs: [
             'Before content can be searched, it has to be broken into smaller pieces. This is where a lot of assistants quietly lose quality. A naive approach just cuts every so many characters, which can slice a paragraph in half or split a heading from the text it belongs to. We split along the natural structure of the content instead:',
@@ -995,6 +1002,418 @@ export const POST_CHAPTERS: Record<string, BlogChapter[]> = {
           callout: {
             title: 'The throughline',
             text: 'Together, they turn "the assistant feels better" into something we can actually show — which is the only honest way to improve something people rely on. This concludes the Corespan AI Assistant series: a knowledge base that keeps itself current, an assistant that always grounds its answers, and automated quality checks that catch every change. Measure it, ground it, and never ship on a hunch.',
+          },
+        },
+      ],
+    },
+  ],
+  'ai-studio-stack-backbone': [
+    {
+      title: '',
+      sections: [
+        {
+          heading: 'What the backbone has to do',
+          paragraphs: [
+            "People often ask what Corespan AI Studio is built on. It's a fair question, and the honest answer is that it's not one magic tool — it's a carefully chosen set of well-understood, mostly open-source pieces, each doing one job well. This post is about the backbone: the part that takes a request like \"run this benchmark on that GPU machine,\" makes it actually happen, and records the result. (This piece is open source — you can read the code yourself.) Part 2 covers the AI frameworks and the workloads that run on top.",
+            'Imagine you want to benchmark a model on a specific GPU server. Behind that one click, a lot has to go right: the request has to be accepted, the job has to run on the correct machine, it might take a long time, logs need to stream back live, and the results have to be saved so you can compare them later. The backbone coordinates all of it. Here are the pieces.',
+          ],
+        },
+        {
+          heading: 'The front door: the API',
+          paragraphs: [
+            "Every request comes in through an API (built with FastAPI, a popular Python web framework). Think of it as the front desk. You hand it a request, it immediately gives you a ticket number so you're not left waiting, and it can stream live updates back to your screen while the work runs. It doesn't do the heavy lifting itself — it takes the order and passes it along.",
+          ],
+        },
+        {
+          heading: 'The waiting line: a job queue',
+          paragraphs: [
+            "GPU jobs can run for minutes or hours, so they can't run inside a quick web request. Instead, each job goes into a queue and a worker picks it up when it's ready. We use a broker (RabbitMQ) to hold the line of jobs and workers (Celery) to do the actual running.",
+          ],
+          callout: {
+            title: 'Why a queue matters',
+            text: "The big benefit is reliability. If a worker restarts or something hiccups mid-job, the queue still holds the work so it isn't lost, rather than the whole thing collapsing. Long jobs run in the background without freezing anything up front.",
+          },
+        },
+        {
+          heading: 'Reaching the GPU machines',
+          paragraphs: [
+            "The workers don't run the benchmark on themselves — they run it on the GPU servers. To do that, a worker securely logs into the target machine (over SSH, the standard secure way to control a remote computer) and starts the workload there.",
+            'This is what lets one central system drive many different GPU boxes, whether that is a server full of NVIDIA cards or AMD cards, without anyone manually logging in and typing commands.',
+          ],
+        },
+        {
+          heading: 'Running things the same way everywhere: containers',
+          paragraphs: [
+            'Every workload ships as a container (using Docker). A container packages the program together with everything it needs to run, so it behaves the same on every machine — no "it worked on my computer" surprises. When a job starts, the machine pulls the right container and the model\'s files, then runs it. This is a big part of what makes results trustworthy and repeatable.',
+          ],
+        },
+        {
+          heading: 'Remembering everything: the database',
+          paragraphs: [
+            "Every run, its settings, its measurements, and its logs are saved into a database (PostgreSQL, a reliable open-source database). That stored history powers a leaderboard you can filter and sort, and lets you put two runs side by side to compare them. Nothing lives only in someone's terminal — it is all kept and searchable.",
+          ],
+        },
+        {
+          heading: 'Putting it together',
+          paragraphs: ['Here is the whole flow in one picture:'],
+          code: [
+            {
+              lines: [
+                'You (in the browser)',
+                '      -> API (takes the request, streams logs back)',
+                '           -> Job queue (holds the work)',
+                '                -> Worker (logs into the GPU machine)',
+                '                     -> GPU machine runs the workload in a container',
+                '                          -> results & logs saved to the database',
+                '                               -> Dashboard you can search and compare',
+              ],
+            },
+          ],
+        },
+        {
+          heading: 'Why the pieces, not the parts, matter',
+          paragraphs: [
+            'None of these pieces is exotic on its own. The value is in how they fit together: a simple front door, a reliable waiting line, a safe way to reach many machines, containers for consistency, and a database that never forgets. That combination is what turns a pile of GPU servers into something you can actually run, trust, and learn from.',
+          ],
+          callout: {
+            title: 'Next in the series',
+            text: 'Part 2 — The AI Frameworks and Workloads, where we look at the tools that do the actual machine-learning work, and the different kinds of jobs AI Studio can run.',
+          },
+          relatedPostId: 'ai-studio-stack-frameworks',
+          relatedLabel: 'Read Part 2: The AI Frameworks and Workloads',
+        },
+      ],
+    },
+  ],
+  'ai-studio-stack-frameworks': [
+    {
+      title: '',
+      sections: [
+        {
+          heading: 'What runs on top of the backbone',
+          paragraphs: [
+            'Part 1 covered the backbone — the system that takes a request, runs it on the right GPU machine, and saves the result. This post is about what actually runs on top: the AI tools that do the real work, and the different kinds of jobs AI Studio can handle.',
+            "There's no single framework that does everything well, so we use the right tool for each job. Here's the toolkit, in plain terms.",
+          ],
+          relatedPostId: 'ai-studio-stack-backbone',
+          relatedLabel: 'Read Part 1: The Backbone That Runs the Work',
+        },
+        {
+          heading: 'The frameworks that run the models',
+          points: [
+            {
+              term: 'PyTorch',
+              text: 'is the workhorse. It is the most widely used framework for building and running AI models, and it powers most of our workloads, from image recognition to language model fine-tuning.',
+            },
+            {
+              term: 'JAX (with a library called Flax)',
+              text: 'is a second framework we use where raw speed matters most. For some image-recognition work, it compiles the math ahead of time so it runs especially fast and predictably on the GPU — a good example of choosing a specialized tool for a specific job rather than forcing one framework everywhere.',
+            },
+            {
+              term: 'Hugging Face',
+              text: "is where the models themselves come from. It is the industry's main hub for open models and their files; AI Studio pulls the requested model from there and caches it on the machine. Its Transformers library is also what a lot of the model code is built on.",
+            },
+          ],
+        },
+        {
+          heading: 'Serving language models efficiently',
+          paragraphs: [
+            'Running a large language model quickly, especially for many requests at once, is its own challenge. We use vLLM, a serving engine designed to make LLMs run efficiently on GPUs and to handle lots of simultaneous requests without wasting memory. It is what sits behind our language-model benchmarks. (We are also planning to make use of other serving tools such as SGLang where they fit.)',
+          ],
+        },
+        {
+          heading: 'Measuring with a common yardstick',
+          paragraphs: [
+            "To make results meaningful and comparable, we lean on MLPerf, the industry-standard benchmark suite. Instead of a made-up test, MLPerf runs the same well-defined tasks the whole industry uses, for both language models and image recognition, so our numbers can be compared fairly against everyone else's.",
+          ],
+        },
+        {
+          heading: 'The workloads themselves',
+          paragraphs: [
+            'The platform is not tied to one kind of AI. It runs different kinds of workloads, each packaged to run on demand:',
+          ],
+          points: [
+            {
+              term: 'Language model inference and benchmarking',
+              text: 'measuring how fast and efficiently a model answers.',
+            },
+            {
+              term: 'Jupyter Notebook',
+              text: 'a full interactive notebook environment launched right on a GPU machine, for hands-on experiments, custom tests, and open-ended exploration. It also includes a built-in AI assistant that helps you write, run, and understand code as you go.',
+            },
+          ],
+        },
+        {
+          heading: 'Running at scale, and keeping an eye on things',
+          paragraphs: [
+            'Individual jobs are one thing; running many of them reliably is another. For now the backend runs on Docker — the same containers from Part 1 that keep every workload consistent from one machine to the next — and we are moving toward Kubernetes to run those containers at scale.',
+          ],
+        },
+        {
+          heading: 'The takeaway',
+          paragraphs: [
+            'The stack is deliberately broad and mostly open-source: proven frameworks for building and running models, an efficient engine for serving language models, a standard yardstick for measuring them, a variety of real workloads, and the automation to run it all at scale. None of it is locked to a single vendor or a single kind of AI.',
+          ],
+          callout: {
+            title: 'The throughline',
+            text: 'Paired with the backbone from Part 1, it is what lets AI Studio take almost any AI job, run it on the right hardware, and give you a result you can trust and compare.',
+          },
+        },
+      ],
+    },
+  ],
+  'rtx-5090-vs-h100-inference-node': [
+    {
+      title: '',
+      sections: [
+        {
+          heading: 'Can consumer GPUs compete with data-center hardware?',
+          paragraphs: [
+            'Can a PCIe-attached consumer-GPU node actually compete with data-center hardware on real inference workloads? We put a 4× RTX 5090 node (a Corespan PRU 2500) to the test on a 32B-parameter model, and the answer turned out to hinge almost entirely on configuration. With the right setup, the node not only held its own, it out-throughput a single fully-optimized H100 on the same model class, at roughly one-tenth the cost per million tokens.',
+            'Here is the run, the tuning that unlocked it, how it stacks up against published H100 numbers, and why the economics matter.',
+          ],
+        },
+        {
+          heading: 'The setup',
+          points: [
+            { term: 'Model', text: 'Qwen2.5-32B-Instruct' },
+            { term: 'Serving', text: 'vLLM (OpenAI-compatible API on Uvicorn)' },
+            { term: 'Hardware', text: '4× RTX 5090 in a PRU 2500' },
+            {
+              term: 'Load',
+              text: '20 concurrent requests, 200 total, up to 1,024 output tokens each, generated with ApacheBench',
+            },
+          ],
+          callout: {
+            title: 'Two runs',
+            text: 'We ran this twice: once with a straightforward baseline configuration, and once tuned for the specific quirks of consumer GPUs.',
+          },
+        },
+        {
+          heading: 'Run 1 — the baseline',
+          paragraphs: [
+            'Our first run used tensor parallel across all four GPUs (TP=4) at BF16 precision:',
+          ],
+          points: [
+            { text: '~860 tok/s aggregate decode throughput (~215 tok/s per GPU)' },
+            { text: '0.84 req/s' },
+            { text: 'P50 ≈ 21.7 s, P95 ≈ 24.5 s' },
+            { text: '0 failures across 200 requests' },
+          ],
+          callout: {
+            title: 'Respectable, but not fast',
+            text: "Per-GPU, ~215 tok/s sits right inside the 160–220 tok/s/GPU envelope that Qwen, vLLM, and SGLang report for full-precision 32B serving. Tail latency was tight (P95 only ~13% above P50) with zero failures or out-of-memory errors, a sign the configuration was stable. But it wasn't fast — and the reason points directly at how to fix it.",
+          },
+        },
+        {
+          heading: 'Why the baseline left performance on the table',
+          paragraphs: [
+            'The RTX 5090 has no NVLink. That single fact drives the whole tuning story. With tensor parallel, every layer\'s math is split across GPUs, which means the GPUs must constantly exchange partial results (an "all-reduce") — and on a 5090 node, all that traffic has to cross the PCIe bus. That cross-GPU chatter becomes the bottleneck.',
+            'So we changed three things at once:',
+          ],
+          points: [
+            {
+              term: 'Pipeline parallel (PP=4) instead of tensor parallel',
+              text: 'Instead of splitting each layer across GPUs, pipeline parallel gives each GPU a different stage of the model and passes work down the line. It largely avoids the PCIe-bound all-reduce that was throttling the baseline. On consumer GPUs without NVLink, this is the single biggest win.',
+            },
+            {
+              term: 'FP8 precision',
+              text: "The 5090's Blackwell architecture supports FP8 natively, worth roughly 1.3–1.5× over BF16 for this kind of work.",
+            },
+            {
+              term: 'Chunked prefill with a large token budget',
+              text: 'Using `--max-num-batched-tokens 65536` keeps all four pipeline stages full instead of stalling.',
+            },
+          ],
+        },
+        {
+          heading: 'Run 2 — the tuned configuration',
+          paragraphs: ['Same model, same hardware, same load. Only the configuration changed:'],
+          points: [
+            { text: '~5,345 tok/s aggregate (~1,336 tok/s per GPU)' },
+            { text: '5.22 req/s' },
+            { text: 'P50 = 127 ms, P95 ≈ 7.0 s' },
+            { text: '0 failures across 200 requests' },
+          ],
+        },
+        {
+          heading: 'Before and after',
+          table: {
+            headers: [
+              'Metric',
+              'Baseline (TP=4, BF16)',
+              'Tuned (PP=4, FP8, chunked prefill)',
+              'Change',
+            ],
+            rows: [
+              ['Aggregate throughput', '~860 tok/s', '~5,345 tok/s', '~6.2×'],
+              ['Per-GPU throughput', '~215 tok/s', '~1,336 tok/s', '~6.2×'],
+              ['Requests/sec', '0.84', '5.22', '~6.2×'],
+              ['Median latency (P50)', '21.7 s', '127 ms', '~170× faster'],
+              ['P95 latency', '24.5 s', '7.0 s', '~3.5× faster'],
+              ['Failures', '0 / 200', '0 / 200', 'unchanged'],
+            ],
+          },
+          callout: {
+            title: 'A 6.2× gain from configuration alone',
+            text: 'No hardware change. The latency collapse is the tell: with the all-reduce bottleneck gone, most requests clear the pipeline near-instantly because first-token time and decode are no longer serialized behind synchronous cross-GPU communication.',
+          },
+        },
+        {
+          heading: 'How it compares to an H100',
+          paragraphs: [
+            "The most useful yardstick is a single H100 SXM running the same 32B model class at FP8, as published in GPUStack's H100 performance lab:",
+          ],
+          table: {
+            headers: ['Configuration', 'Total throughput', 'Per-GPU'],
+            rows: [
+              ['1× H100 SXM, vLLM, BF16', '2,352 tok/s', '2,352 tok/s'],
+              ['1× H100 SXM, vLLM, FP8', '~4,005 tok/s', '~4,005 tok/s'],
+              [
+                '1× H100 SXM, TRT-LLM FP8 + chunked prefill (optimized)',
+                '4,285 tok/s',
+                '4,285 tok/s',
+              ],
+              [
+                '4× RTX 5090, vLLM FP8 + PP + chunked prefill (this test)',
+                '~5,345 tok/s',
+                '~1,336 tok/s/GPU',
+              ],
+            ],
+          },
+          points: [
+            {
+              term: 'On aggregate throughput, the 4× 5090 node wins',
+              text: 'It out-throughputs a single fully-optimized H100 SXM on the same model class (5,345 vs. 4,285 tok/s), and it does so on vLLM rather than a hand-optimized TRT-LLM stack, so there is still headroom.',
+            },
+            {
+              term: 'Per GPU, the H100 still wins, by roughly 3.2×',
+              text: "That is expected: the H100 has HBM3, NVLink, and far more memory bandwidth (~3.35 TB/s vs. the 5090's ~1.79 TB/s GDDR7). The 5090's case was never single-GPU performance.",
+            },
+          ],
+          callout: {
+            title: 'The real comparison',
+            text: "The 5090's case is aggregate throughput per dollar.",
+          },
+        },
+        {
+          heading: 'The cost story',
+          paragraphs: [
+            'At sustained utilization, a 4× RTX 5090 PRU 2500 node delivers Qwen-32B-class FP8 inference at roughly $0.04 per million tokens, against roughly $0.30–0.60 per million tokens for an H100 on cloud pricing depending on the provider. That is not a marginal improvement; it is 7.5×–15× cheaper for the same model class at comparable throughput. Over a production deployment serving billions of tokens a month, that gap is the difference between an inference workload that pencils out and one that does not.',
+          ],
+        },
+        {
+          heading: 'Where the savings start: hardware acquisition cost',
+          paragraphs: [
+            'The cloud-cost gap is downstream of an even more basic one, the raw cost of the GPUs. At current list pricing an RTX 5090 is about $4,000 per card, an H100 PCIe runs $25,000–30,000, and an H100 SXM (the variant in the throughput comparison above) runs $35,000–40,000 and only ships inside complete HGX systems. Per node:',
+          ],
+          table: {
+            headers: ['Node', 'Approx. GPU cost'],
+            rows: [
+              ['4× RTX 5090', '~$16,000'],
+              ['4× H100 PCIe', '~$110,000'],
+              ['4× H100 SXM', '~$150,000'],
+              ['8× H100 SXM (typical HGX)', '~$300,000'],
+            ],
+          },
+          callout: {
+            title: 'The underlying reason',
+            text: 'The 4× 5090 node beats a fully-optimized single H100 SXM on aggregate throughput while costing roughly one-ninth as much in GPU hardware as a 4× H100 SXM node, and about one-nineteenth as much as the 8× H100 SXM HGX systems customers usually benchmark against — before you even add the chassis, NVLink switching, networking, and cooling that HGX systems require. That is the underlying reason cost-per-token collapses: the hardware is roughly an order of magnitude cheaper to acquire and delivers equal or better throughput on the workloads that matter.',
+          },
+        },
+        {
+          heading: 'What happens at 8 and 10 GPUs',
+          paragraphs: [
+            'The 4× number is the floor, not the ceiling. A PRU 2500 can hold 8 or 10 RTX 5090s, which opens two deployment modes:',
+          ],
+          points: [
+            {
+              term: 'Pipeline-parallel one big model (PP=8 or PP=10)',
+              text: 'For 32B-class models at FP8, deeper pipelines give the scheduler more stages to fill. Throughput scales meaningfully (though not perfectly linearly, since pipeline-bubble overhead grows with depth), putting an 8× 5090 node into dual-H100-SXM territory on aggregate throughput at a fraction of the cost.',
+            },
+            {
+              term: 'Replica parallelism for models that fit per-GPU',
+              text: 'Running one independent model instance per GPU has zero inter-GPU traffic on the critical path, so it scales almost linearly. A published 4× RTX 5090 benchmark of a 30B model at INT4, one instance per GPU, hit 12,744 tok/s (CloudRift); extrapolated to 8–10 GPUs in a single chassis, that is roughly 25,000–32,000 tok/s for models that fit in 32 GB VRAM at INT4.',
+            },
+          ],
+          callout: {
+            title: 'In practice',
+            text: 'Most production deployments will run a mix: pipeline-parallel for the large models served externally, replica-parallel for smaller specialized models behind internal tools.',
+          },
+        },
+        {
+          heading: 'Why the chassis matters',
+          paragraphs: [
+            'Benchmark numbers only translate to production if the node can sustain them. The PRU 2500 running 5090s is fully liquid-cooled, which is what makes continuous full-power operation on 5090-class silicon practical — air-cooled multi-5090 nodes throttle under sustained load well before they reach their published numbers.',
+            'Its split-side design supports up to 5× liquid-cooled RTX 5090 on one side while the other side can host another 5× 5090 (for a 10-GPU node), RTX 6000 PRO cards (96 GB VRAM each, for larger models or fine-tuning), AMD Instinct MI350 accelerators (for ROCm/dual-vendor strategies), or up to 600 TB of SSD for RAG, vector search, or model caching. That composability, mixing accelerator families and storage in one chassis, is the real product.',
+            'On stability, the tuned run recorded zero failures across 200 requests and no out-of-memory events at the 64K batched-token budget, with the cooling loop keeping every GPU inside its thermal envelope for the full run.',
+          ],
+        },
+        {
+          heading: 'A note on the latency numbers',
+          paragraphs: [
+            'The tuned P50 of 127 ms deserves a caveat, because it is strikingly low for a 1,024-token decode.',
+          ],
+          callout: {
+            title: 'A mixed workload, not instability',
+            text: 'Many requests finish well short of the 1,024-token cap (the model emits an end-of-sequence token early on short prompts) and now stream out in tens of milliseconds, while the genuinely long completions still take a few seconds. The mean was 3.83 s, P95 was 7.0 s, and the max was 30.1 s — exactly what ~1,336 tok/s/GPU implies for a full 1,024-token decode. Most requests clear the pipeline almost instantly and a few long ones decode the full window.',
+          },
+        },
+        {
+          heading: 'Takeaways',
+          points: [
+            {
+              term: 'Configuration matters more than most people assume',
+              text: 'The same hardware went 6.2× faster with no silicon change, just the right parallelism, precision, and scheduling.',
+            },
+            {
+              term: 'On NVLink-less consumer GPUs, pipeline parallel beats tensor parallel',
+              text: 'Avoiding PCIe-bound all-reduce is the key unlock; FP8 and chunked prefill stack cleanly on top.',
+            },
+            {
+              term: 'A 4× RTX 5090 node is a serious inference option',
+              text: 'It can match or beat a single optimized H100 on aggregate 32B throughput, at roughly one-tenth the cost per token and one-ninth the hardware cost, and it scales well past that at 8–10 GPUs.',
+            },
+          ],
+          callout: {
+            title: 'The headline',
+            text: "The headline isn't that consumer GPUs beat data-center GPUs — they don't, per chip. It's that with the right configuration and the right chassis, a well-chosen consumer node delivers data-center-class aggregate throughput at a cost structure that's hard to argue with.",
+          },
+          relatedPostId: 'benchmarking-gpu-clusters',
+          relatedLabel:
+            'Read: Benchmarking GPU Clusters — Why It Matters, and How We Built AI Studio',
+        },
+        {
+          heading: 'Sources',
+          points: [
+            {
+              term: 'Corespan Systems',
+              text: '"Why the PRU 2500 With RTX 5090s Is the Smartest Inference Node You Can Buy Right Now" (corespan.ai/resources/blog)',
+            },
+            {
+              term: 'GPUStack',
+              text: 'Optimizing Qwen-32B on H100 (docs.gpustack.ai)',
+            },
+            {
+              term: 'CloudRift',
+              text: 'RTX 5090 LLM inference benchmarks and cost figures (cloudrift.ai/gpu-benchmarks)',
+            },
+            {
+              term: 'vLLM',
+              text: '32B FP8 serving benchmark (GitHub Issue #17788)',
+            },
+            {
+              term: 'Jarvislabs',
+              text: '32B scaling curves on H100 (jarvislabs.ai)',
+            },
+            {
+              term: 'Community benchmark',
+              text: '4× RTX 5090 tensor-parallel vs. pipeline-parallel (r/LocalLLaMA, Oct 2025)',
+            },
+          ],
+          callout: {
+            title: 'A note on comparisons',
+            text: 'External comparisons use the same 32B model class at FP8 but differing exact models, datasets, and concurrency profiles, so they are best read as order-of-magnitude reference points rather than exact head-to-head numbers.',
           },
         },
       ],

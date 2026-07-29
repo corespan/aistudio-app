@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ComponentType } from 'react'
 import {
   Alert,
   Anchor,
@@ -11,7 +11,9 @@ import {
   Divider,
   Flex,
   Group,
+  Image,
   List,
+  Modal,
   Paper,
   ScrollArea,
   Stack,
@@ -24,18 +26,27 @@ import {
 import {
   IconArrowLeft,
   IconArrowRight,
+  IconArrowsMaximize,
   IconBulb,
   IconCalendar,
   IconCircleCheck,
   IconClockHour4,
   IconInfoCircle,
+  IconSitemap,
   IconStarFilled,
+  IconX,
 } from '@tabler/icons-react'
 import { HEADER_OFFSET } from '@/app/constants'
 import type { BlogChapter, BlogPost, BlogSection } from '../types'
 import { BLOG_POSTS, CATEGORY_ICON_BY_LABEL, CATEGORY_STYLES } from '../constants'
 import { formatDate, gradientBackground } from '../utils'
 import { CoreIcon } from '@/shared/ui'
+import { AgentArchitectureDiagram } from './AgentArchitectureDiagram'
+
+/** Named diagrams a section can reference by key instead of a raster image. */
+const DIAGRAM_COMPONENTS: Record<string, ComponentType<{ accent: string }>> = {
+  'agent-architecture': AgentArchitectureDiagram,
+}
 
 type BlogArticleProps = {
   post: BlogPost
@@ -368,6 +379,9 @@ const ArticleSection = ({
   const relatedPost = section.relatedPostId
     ? BLOG_POSTS.find((post) => post.id === section.relatedPostId)
     : undefined
+  const [imageHovered, setImageHovered] = useState(false)
+  const [zoomed, setZoomed] = useState(false)
+  const glowVar = `var(--mantine-color-${accent}-6)`
 
   return (
     <Stack gap="sm" id={anchorId}>
@@ -387,6 +401,162 @@ const ArticleSection = ({
           {paragraph}
         </Text>
       ))}
+
+      {section.diagram &&
+        (() => {
+          const Diagram = DIAGRAM_COMPONENTS[section.diagram]
+          return Diagram ? (
+            <Box mt={2}>
+              <Diagram accent={accent} />
+            </Box>
+          ) : null
+        })()}
+
+      {section.image && (
+        <Stack gap="sm" mt={6} align="center">
+          {/* Gradient-ring frame: an outer box painted with the category gradient,
+              inset by `p` so a thin color ring shows around the opaque inner panel,
+              plus an ambient color-matched glow so the diagram reads as a featured
+              visual rather than an inline screenshot. */}
+          <Box
+            pos="relative"
+            w="100%"
+            p={3}
+            style={{
+              borderRadius: 'var(--mantine-radius-xl)',
+              background: `linear-gradient(135deg, var(--mantine-color-${accent}-5), var(--mantine-color-${accent}-8))`,
+              boxShadow: `0 32px 64px -28px ${glowVar}80, 0 10px 28px rgba(0,0,0,0.14)`,
+            }}
+          >
+            {section.image.eyebrow && (
+              <Badge
+                size="lg"
+                radius="sm"
+                variant="gradient"
+                gradient={{ from: `${accent}.5`, to: `${accent}.8`, deg: 135 }}
+                leftSection={<CoreIcon icon={<IconSitemap aria-hidden />} size={12} />}
+                pos="absolute"
+                top={-14}
+                left={24}
+                style={{ zIndex: 1, boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }}
+              >
+                {section.image.eyebrow}
+              </Badge>
+            )}
+
+            <UnstyledButton
+              onClick={() => setZoomed(true)}
+              onMouseEnter={() => setImageHovered(true)}
+              onMouseLeave={() => setImageHovered(false)}
+              w="100%"
+              style={{ display: 'block', cursor: 'zoom-in' }}
+              aria-label={`Enlarge: ${section.image.alt}`}
+            >
+              <Box
+                pos="relative"
+                p={{ base: 'sm', sm: 'lg' }}
+                pt={section.image.eyebrow ? { base: 'md', sm: 'xl' } : undefined}
+                style={{
+                  borderRadius: 'calc(var(--mantine-radius-xl) - 3px)',
+                  overflow: 'hidden',
+                  background:
+                    'linear-gradient(160deg, var(--mantine-color-body) 0%, var(--core-surface-1) 100%)',
+                }}
+              >
+                <Image
+                  src={section.image.src}
+                  alt={section.image.alt}
+                  radius="sm"
+                  fit="contain"
+                  style={{
+                    transform: imageHovered ? 'scale(1.012)' : 'none',
+                    transition: 'transform 320ms ease',
+                  }}
+                />
+                <Box
+                  pos="absolute"
+                  bottom={12}
+                  right={12}
+                  p={8}
+                  style={{
+                    borderRadius: '50%',
+                    background: `var(--mantine-color-${accent}-6)`,
+                    opacity: imageHovered ? 1 : 0,
+                    transform: imageHovered ? 'scale(1)' : 'scale(0.8)',
+                    transition: 'opacity 200ms ease, transform 200ms ease',
+                    boxShadow: '0 6px 16px rgba(0,0,0,0.3)',
+                  }}
+                >
+                  <CoreIcon icon={<IconArrowsMaximize color="white" />} size={14} />
+                </Box>
+              </Box>
+            </UnstyledButton>
+          </Box>
+
+          {section.image.caption && (
+            <Text size="xs" c="dimmed" ta="center" maw={620} lh={1.5}>
+              {section.image.caption}
+            </Text>
+          )}
+
+          {section.image.legend && section.image.legend.length > 0 && (
+            <Group gap="lg" justify="center">
+              {section.image.legend.map((item) => (
+                <Group key={item.label} gap={6} wrap="nowrap">
+                  <Box
+                    w={8}
+                    h={8}
+                    style={{
+                      borderRadius: '50%',
+                      background: `var(--mantine-color-${item.color}-5)`,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <Text size="xs" fw={600} c="dimmed">
+                    {item.label}
+                  </Text>
+                </Group>
+              ))}
+            </Group>
+          )}
+
+          <Modal
+            opened={zoomed}
+            onClose={() => setZoomed(false)}
+            size="auto"
+            centered
+            padding={0}
+            radius="lg"
+            withCloseButton={false}
+            overlayProps={{ backgroundOpacity: 0.75, blur: 4 }}
+          >
+            <Box pos="relative">
+              <UnstyledButton
+                onClick={() => setZoomed(false)}
+                aria-label="Close"
+                pos="absolute"
+                top={12}
+                right={12}
+                p={8}
+                style={{
+                  zIndex: 1,
+                  borderRadius: '50%',
+                  background: 'rgba(0,0,0,0.55)',
+                }}
+              >
+                <CoreIcon icon={<IconX color="white" />} size={16} />
+              </UnstyledButton>
+              <Image
+                src={section.image.src}
+                alt={section.image.alt}
+                fit="contain"
+                mah="90vh"
+                w="auto"
+              />
+            </Box>
+          </Modal>
+        </Stack>
+      )}
 
       {section.table && (
         <Paper withBorder radius="md" p={0} mt={2} style={{ overflow: 'hidden' }}>

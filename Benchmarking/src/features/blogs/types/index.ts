@@ -41,6 +41,17 @@ export type BlogTable = {
   rows: string[][]
 }
 
+/** A supporting diagram/screenshot within a section. Path is relative to `public/`. */
+export type BlogImage = {
+  src: string
+  alt: string
+  /** Small eyebrow label shown above the frame, e.g. "System Architecture". */
+  eyebrow?: string
+  caption?: string
+  /** Optional legend chips below the caption, e.g. naming the halves of a diagram. */
+  legend?: { label: string; color: MantineColor }[]
+}
+
 /** One heading-level chunk of an article body. */
 export type BlogSection = {
   heading: string
@@ -50,6 +61,9 @@ export type BlogSection = {
   ordered?: boolean
   code?: BlogCodeBlock[]
   table?: BlogTable
+  image?: BlogImage
+  /** Key into the named-diagram registry (e.g. 'agent-architecture') for a native, non-raster flow diagram. */
+  diagram?: string
   /** Highlighted aside rendered as an Alert. */
   callout?: { title: string; text: string }
   /** Post this section should link out to (e.g. "next in the series"). */
