@@ -2,6 +2,7 @@ import { Badge, Box, Card, Flex, Group, SimpleGrid, Stack, Text, ThemeIcon } fro
 import { IconBolt, IconCpu, IconGauge, IconServerBolt } from '@tabler/icons-react'
 import { StatTile } from './StatTile'
 import { BRAND_GRADIENT, HIGHLIGHTS, ORBIT_ICONS } from '../constants'
+import { CoreIcon } from '@/shared/ui'
 
 /**
  * Hero banner for the About Us page: badge, headline, copy, and highlight
@@ -47,7 +48,7 @@ export const AboutHero = () => (
                 size="lg"
                 tt="none"
                 fw={500}
-                leftSection={<item.icon size={14} />}
+                leftSection={<CoreIcon icon={<item.icon />} size={14} />}
               >
                 {item.label}
               </Badge>
@@ -60,11 +61,11 @@ export const AboutHero = () => (
         <Stack gap="lg">
           <Group justify="center" gap="md">
             <ThemeIcon size={84} radius="xl" variant="gradient" gradient={BRAND_GRADIENT}>
-              <IconCpu size={42} />
+              <CoreIcon icon={<IconCpu />} size={42} />
             </ThemeIcon>
             {ORBIT_ICONS.map((Icon, i) => (
               <ThemeIcon key={i} size={40} radius="xl" variant="light" color="cyan">
-                <Icon size={20} />
+                <CoreIcon icon={<Icon />} size={20} />
               </ThemeIcon>
             ))}
           </Group>

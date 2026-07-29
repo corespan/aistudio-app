@@ -1,6 +1,7 @@
 import { Box, Button, Container, Group, Text, ThemeIcon } from '@mantine/core'
 import { IconBrandGithub, IconChartBar, IconStar } from '@tabler/icons-react'
 import { REPO_URL, TOP_GAP } from '@/app/constants'
+import { CoreIcon } from '@/shared/ui'
 
 /**
  * Fixed AppShell.Footer bar spanning the full screen width, including under
@@ -18,7 +19,7 @@ export const AppFooter = () => (
         <Group h="100%" justify="space-between" align="center" wrap="nowrap" gap="md">
           <Group gap="xs" wrap="nowrap">
             <ThemeIcon size={28} radius="md" variant="light" color="indigo">
-              <IconChartBar size={16} stroke={1.9} />
+              <CoreIcon icon={<IconChartBar stroke={1.9} />} size={16} />
             </ThemeIcon>
             <Text size="sm" c="dimmed">
               © {new Date().getFullYear()} AI Studio
@@ -37,8 +38,8 @@ export const AppFooter = () => (
               variant="default"
               size="xs"
               radius="md"
-              leftSection={<IconBrandGithub size={15} aria-hidden />}
-              rightSection={<IconStar size={13} aria-hidden />}
+              leftSection={<CoreIcon icon={<IconBrandGithub aria-hidden />} size={15} />}
+              rightSection={<CoreIcon icon={<IconStar aria-hidden />} size={13} />}
             >
               Star us on GitHub
             </Button>

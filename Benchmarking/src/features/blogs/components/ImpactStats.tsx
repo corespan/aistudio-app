@@ -8,6 +8,7 @@ import {
   useMantineColorScheme,
 } from '@mantine/core'
 import { IMPACT_STATS } from '../constants'
+import { CoreIcon } from '@/shared/ui'
 
 /**
  * Pull-stat band under the hero. These are the three numbers that justify the
@@ -30,7 +31,7 @@ export const ImpactStats = () => {
                 {value}
               </Text>
               <ThemeIcon variant="light" color={color} size={36} radius="md">
-                <Icon size={19} aria-hidden />
+                <CoreIcon icon={<Icon aria-hidden />} size={19} />
               </ThemeIcon>
             </Group>
             <Stack gap={4}>

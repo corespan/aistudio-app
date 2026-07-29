@@ -1,6 +1,7 @@
 import { Box, Flex, Stack, Text, ThemeIcon, Title } from '@mantine/core'
 import { PipelineDiagram } from './PipelineDiagram'
 import type { VersionRowProps } from '../types'
+import { CoreIcon } from '@/shared/ui'
 
 export const VersionRow = ({ version }: VersionRowProps) => (
   <Stack gap="md">
@@ -14,7 +15,7 @@ export const VersionRow = ({ version }: VersionRowProps) => (
         pos="relative"
         style={{ zIndex: 1 }}
       >
-        <version.icon size={22} />
+        <CoreIcon icon={<version.icon />} size={22} />
       </ThemeIcon>
 
       <Stack gap={2}>

@@ -35,6 +35,7 @@ import { HEADER_OFFSET } from '@/app/constants'
 import type { BlogChapter, BlogPost, BlogSection } from '../types'
 import { BLOG_POSTS, CATEGORY_ICON_BY_LABEL, CATEGORY_STYLES } from '../constants'
 import { formatDate, gradientBackground } from '../utils'
+import { CoreIcon } from '@/shared/ui'
 
 type BlogArticleProps = {
   post: BlogPost
@@ -80,7 +81,7 @@ export const BlogArticle = ({ post, previous, next, onBack, onNavigate }: BlogAr
         variant="subtle"
         color="gray"
         size="sm"
-        leftSection={<IconArrowLeft size={15} aria-hidden />}
+        leftSection={<CoreIcon icon={<IconArrowLeft aria-hidden />} size={15} />}
         onClick={onBack}
         w="fit-content"
       >
@@ -97,19 +98,23 @@ export const BlogArticle = ({ post, previous, next, onBack, onNavigate }: BlogAr
           background: gradientBackground(style),
         }}
       >
-        <CategoryIcon
+        <CoreIcon
+          icon={
+            <CategoryIcon
+              stroke={1}
+              color="white"
+              aria-hidden
+              style={{
+                opacity: 0.14,
+                position: 'absolute',
+                top: -50,
+                right: -30,
+                transform: 'rotate(-10deg)',
+                pointerEvents: 'none',
+              }}
+            />
+          }
           size={260}
-          stroke={1}
-          color="white"
-          aria-hidden
-          style={{
-            opacity: 0.14,
-            position: 'absolute',
-            top: -50,
-            right: -30,
-            transform: 'rotate(-10deg)',
-            pointerEvents: 'none',
-          }}
         />
 
         <Stack gap="md" pos="relative" maw={820}>
@@ -123,7 +128,7 @@ export const BlogArticle = ({ post, previous, next, onBack, onNavigate }: BlogAr
                 color={style.color}
                 radius="sm"
                 size="sm"
-                leftSection={<IconStarFilled size={10} aria-hidden />}
+                leftSection={<CoreIcon icon={<IconStarFilled aria-hidden />} size={10} />}
               >
                 {post.chapters.length}-part read
               </Badge>
@@ -152,12 +157,12 @@ export const BlogArticle = ({ post, previous, next, onBack, onNavigate }: BlogAr
             </Group>
 
             <Group gap="xs" c="white" opacity={0.85}>
-              <IconCalendar size={14} aria-hidden />
+              <CoreIcon icon={<IconCalendar aria-hidden />} size={14} />
               <Text size="xs">{formatDate(post.date)}</Text>
             </Group>
 
             <Group gap="xs" c="white" opacity={0.85}>
-              <IconClockHour4 size={14} aria-hidden />
+              <CoreIcon icon={<IconClockHour4 aria-hidden />} size={14} />
               <Text size="xs">{post.readMinutes} min read</Text>
             </Group>
           </Group>
@@ -179,7 +184,7 @@ export const BlogArticle = ({ post, previous, next, onBack, onNavigate }: BlogAr
             >
               <Group gap="sm" mb="sm">
                 <ThemeIcon variant="light" color={style.color} size={32} radius="md">
-                  <IconBulb size={17} aria-hidden />
+                  <CoreIcon icon={<IconBulb aria-hidden />} size={17} />
                 </ThemeIcon>
                 <Text fw={700} fz="sm">
                   Key takeaways
@@ -191,7 +196,7 @@ export const BlogArticle = ({ post, previous, next, onBack, onNavigate }: BlogAr
                 maw={820}
                 icon={
                   <ThemeIcon variant="light" color={style.color} size={18} radius="xl">
-                    <IconCircleCheck size={12} aria-hidden />
+                    <CoreIcon icon={<IconCircleCheck aria-hidden />} size={12} />
                   </ThemeIcon>
                 }
               >
@@ -462,7 +467,7 @@ const ArticleSection = ({
           mt={4}
           maw={820}
           title={section.callout.title}
-          icon={<IconInfoCircle size={16} aria-hidden />}
+          icon={<CoreIcon icon={<IconInfoCircle aria-hidden />} size={16} />}
         >
           <Text fz="sm" lh={1.65}>
             {section.callout.text}
@@ -481,7 +486,7 @@ const ArticleSection = ({
           style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
         >
           {section.relatedLabel ?? `Read: ${relatedPost.title}`}
-          <IconArrowRight size={14} aria-hidden />
+          <CoreIcon icon={<IconArrowRight aria-hidden />} size={14} />
         </Anchor>
       )}
     </Stack>
@@ -530,11 +535,11 @@ const SiblingLink = ({
             justify={isNext ? 'flex-end' : 'flex-start'}
             c={hovered ? accent : 'dimmed'}
           >
-            {!isNext && <IconArrowLeft size={13} aria-hidden />}
+            {!isNext && <CoreIcon icon={<IconArrowLeft aria-hidden />} size={13} />}
             <Text size="xs" fw={600} tt="uppercase">
               {isNext ? 'Next' : 'Previous'}
             </Text>
-            {isNext && <IconArrowRight size={13} aria-hidden />}
+            {isNext && <CoreIcon icon={<IconArrowRight aria-hidden />} size={13} />}
           </Group>
           <Text fw={600} fz="sm" c={hovered ? accent : undefined}>
             {post.title}

@@ -1,6 +1,7 @@
 import { Box, Button, Group, Stack, Text, Title } from '@mantine/core'
 import { IconArrowDown, IconTopologyStar3 } from '@tabler/icons-react'
 import { BLOG_POSTS } from '../constants'
+import { CoreIcon } from '@/shared/ui'
 
 const scrollTo = (id: string) =>
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -52,19 +53,23 @@ export const BlogHero = () => {
           pointerEvents: 'none',
         }}
       />
-      <IconTopologyStar3
-        aria-hidden
+      <CoreIcon
+        icon={
+          <IconTopologyStar3
+            aria-hidden
+            stroke={0.8}
+            color="white"
+            style={{
+              position: 'absolute',
+              top: '10%',
+              right: '4%',
+              opacity: 0.05,
+              transform: 'rotate(8deg)',
+              pointerEvents: 'none',
+            }}
+          />
+        }
         size={260}
-        stroke={0.8}
-        color="white"
-        style={{
-          position: 'absolute',
-          top: '10%',
-          right: '4%',
-          opacity: 0.05,
-          transform: 'rotate(8deg)',
-          pointerEvents: 'none',
-        }}
       />
 
       <Stack gap="lg" pos="relative" maw={640}>
@@ -95,7 +100,7 @@ export const BlogHero = () => {
             radius="md"
             size="sm"
             onClick={() => scrollTo('featured-post')}
-            rightSection={<IconArrowDown size={14} aria-hidden />}
+            rightSection={<CoreIcon icon={<IconArrowDown aria-hidden />} size={14} />}
           >
             Start reading
           </Button>

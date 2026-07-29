@@ -14,6 +14,7 @@ import { IconArrowRight, IconStarFilled } from '@tabler/icons-react'
 import type { BlogPost } from '../types'
 import { CATEGORY_ICON_BY_LABEL, CATEGORY_STYLES } from '../constants'
 import { formatDate, gradientBackground } from '../utils'
+import { CoreIcon } from '@/shared/ui'
 
 type BlogCardProps = {
   post: BlogPost
@@ -86,19 +87,23 @@ export const BlogCard = ({ post, index, onOpen }: BlogCardProps) => {
             {String(index).padStart(2, '0')}
           </Text>
 
-          <CategoryIcon
+          <CoreIcon
+            icon={
+              <CategoryIcon
+                stroke={1}
+                color="white"
+                aria-hidden
+                style={{
+                  opacity: 0.22,
+                  position: 'absolute',
+                  top: 10,
+                  right: 6,
+                  transform: hovered ? 'rotate(-4deg) scale(1.1)' : 'rotate(-8deg)',
+                  transition: 'transform 300ms ease',
+                }}
+              />
+            }
             size={90}
-            stroke={1}
-            color="white"
-            aria-hidden
-            style={{
-              opacity: 0.22,
-              position: 'absolute',
-              top: 10,
-              right: 6,
-              transform: hovered ? 'rotate(-4deg) scale(1.1)' : 'rotate(-8deg)',
-              transition: 'transform 300ms ease',
-            }}
           />
 
           <Badge
@@ -119,7 +124,7 @@ export const BlogCard = ({ post, index, onOpen }: BlogCardProps) => {
               color="dark"
               radius="sm"
               size="sm"
-              leftSection={<IconStarFilled size={9} aria-hidden />}
+              leftSection={<CoreIcon icon={<IconStarFilled aria-hidden />} size={9} />}
               pos="absolute"
               top={12}
               right={16}
@@ -199,13 +204,17 @@ export const BlogCard = ({ post, index, onOpen }: BlogCardProps) => {
                 <Text size="xs" fw={600}>
                   Read
                 </Text>
-                <IconArrowRight
+                <CoreIcon
+                  icon={
+                    <IconArrowRight
+                      aria-hidden
+                      style={{
+                        transform: hovered ? 'translateX(3px)' : 'none',
+                        transition: 'transform 160ms ease',
+                      }}
+                    />
+                  }
                   size={13}
-                  aria-hidden
-                  style={{
-                    transform: hovered ? 'translateX(3px)' : 'none',
-                    transition: 'transform 160ms ease',
-                  }}
                 />
               </Group>
             </Group>

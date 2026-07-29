@@ -107,9 +107,9 @@ export const AppLayout = () => {
               rightSection={
                 showChevron &&
                 (jupyterMenuOpened ? (
-                  <IconChevronUp size={14} stroke={1.8} />
+                  <CoreIcon icon={<IconChevronUp stroke={1.8} />} size={14} />
                 ) : (
-                  <IconChevronDown size={14} stroke={1.8} />
+                  <CoreIcon icon={<IconChevronDown stroke={1.8} />} size={14} />
                 ))
               }
               childrenOffset={16}

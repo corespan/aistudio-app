@@ -16,6 +16,7 @@ import { IconArrowRight, IconStarFilled } from '@tabler/icons-react'
 import type { BlogPost } from '../types'
 import { CATEGORY_ICON_BY_LABEL, CATEGORY_STYLES } from '../constants'
 import { formatDate, gradientBackground } from '../utils'
+import { CoreIcon } from '@/shared/ui'
 
 type FeaturedPostCardProps = {
   post: BlogPost
@@ -86,21 +87,25 @@ export const FeaturedPostCard = ({ post, onOpen }: FeaturedPostCardProps) => {
               01
             </Text>
 
-            <CategoryIcon
+            <CoreIcon
+              icon={
+                <CategoryIcon
+                  stroke={1}
+                  color="white"
+                  aria-hidden
+                  style={{
+                    opacity: 0.2,
+                    position: 'absolute',
+                    top: '50%',
+                    right: '10%',
+                    transform: hovered
+                      ? 'translateY(-50%) rotate(-4deg) scale(1.06)'
+                      : 'translateY(-50%) rotate(-8deg)',
+                    transition: 'transform 300ms ease',
+                  }}
+                />
+              }
               size={160}
-              stroke={1}
-              color="white"
-              aria-hidden
-              style={{
-                opacity: 0.2,
-                position: 'absolute',
-                top: '50%',
-                right: '10%',
-                transform: hovered
-                  ? 'translateY(-50%) rotate(-4deg) scale(1.06)'
-                  : 'translateY(-50%) rotate(-8deg)',
-                transition: 'transform 300ms ease',
-              }}
             />
 
             <Badge
@@ -108,7 +113,7 @@ export const FeaturedPostCard = ({ post, onOpen }: FeaturedPostCardProps) => {
               radius="sm"
               variant="white"
               color={style.color}
-              leftSection={<IconStarFilled size={12} aria-hidden />}
+              leftSection={<CoreIcon icon={<IconStarFilled aria-hidden />} size={12} />}
               pos="absolute"
               top={20}
               left={20}
@@ -195,13 +200,17 @@ export const FeaturedPostCard = ({ post, onOpen }: FeaturedPostCardProps) => {
                 <Text size="xs" fw={600}>
                   Read the full story
                 </Text>
-                <IconArrowRight
+                <CoreIcon
+                  icon={
+                    <IconArrowRight
+                      aria-hidden
+                      style={{
+                        transform: hovered ? 'translateX(3px)' : 'none',
+                        transition: 'transform 160ms ease',
+                      }}
+                    />
+                  }
                   size={14}
-                  aria-hidden
-                  style={{
-                    transform: hovered ? 'translateX(3px)' : 'none',
-                    transition: 'transform 160ms ease',
-                  }}
                 />
               </Group>
             </Group>

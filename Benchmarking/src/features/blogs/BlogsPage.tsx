@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Container, Group, Stack, Text, ThemeIcon } from '@mantine/core'
 import { IconAlertTriangle, IconLayoutGrid, IconStarFilled } from '@tabler/icons-react'
 import { PageShell } from '@/app/layout/PageShell'
+import { CoreIcon } from '@/shared/ui'
 import { BlogHero } from './components/BlogHero'
 import { ImpactStats } from './components/ImpactStats'
 import { FeaturedPostCard } from './components/FeaturedPostCard'
@@ -19,7 +20,7 @@ type SectionHeadingProps = {
 const SectionHeading = ({ icon: Icon, title, subtitle }: SectionHeadingProps) => (
   <Group gap="sm" wrap="nowrap">
     <ThemeIcon variant="light" color="indigo" size={34} radius="md">
-      <Icon size={17} aria-hidden />
+      <CoreIcon icon={<Icon aria-hidden />} size={17} />
     </ThemeIcon>
     <Stack gap={0}>
       <Text fw={700} fz="md" lh={1.2}>
