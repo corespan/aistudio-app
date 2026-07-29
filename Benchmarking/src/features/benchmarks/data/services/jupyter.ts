@@ -5,3 +5,6 @@ export const launchJupyter = (payload: LaunchJupyterPayload) =>
   AiClient.post<unknown>('jupyter/launch', payload)
 
 export const getJupyterInstances = () => AiClient.get<unknown>('jupyter/instances')
+
+export const deleteJupyterInstance = (taskId: string) =>
+  AiClient.delete<unknown>(`jupyter/instances/${encodeURIComponent(taskId)}`)

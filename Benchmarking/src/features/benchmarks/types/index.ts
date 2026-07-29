@@ -159,6 +159,11 @@ export type JupyterInstance = {
   updatedAt: string
 }
 
+// components/DeleteJupyterInstanceButton
+export type JupyterInstanceActionProps = {
+  instance: JupyterInstance
+}
+
 // store/useBenchmarkFiltersStore
 /**
  * Active table filters, keyed by the exact `/api/v1/benchmarks` query-param names

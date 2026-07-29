@@ -1,11 +1,11 @@
-import { Badge, Button, Tooltip } from '@mantine/core'
-import { IconExternalLink } from '@tabler/icons-react'
-import { CoreIcon, CoreTable, useCoreTable } from '@/shared/ui'
+import { Badge, Group, Tooltip } from '@mantine/core'
+import { CoreTable, useCoreTable } from '@/shared/ui'
 import type { ColumnDef } from '@tanstack/react-table'
 import type { JupyterInstance } from '../types'
 import { useJupyterInstances } from '../data/queries/useJupyterInstances'
 import { JUPYTER_INSTANCE_STATE_COLORS } from '../constants'
 import { maskIp } from '../lib/maskIp'
+import { DeleteJupyterInstanceButton } from './DeleteJupyterInstanceButton'
 
 // Show only month, day, and time — full timestamp stays available on hover.
 const formatTimestamp = (raw: string) => {
@@ -77,6 +77,17 @@ const columns: ColumnDef<JupyterInstance>[] = [
         </Tooltip>
       )
     },
+  },
+  {
+    id: 'actions',
+    header: '',
+    enableSorting: false,
+    enableGlobalFilter: false,
+    cell: ({ row }) => (
+      <Group gap="xs" wrap="nowrap" justify="flex-end">
+        <DeleteJupyterInstanceButton instance={row.original} />
+      </Group>
+    ),
   },
 ]
 
