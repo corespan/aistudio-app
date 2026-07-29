@@ -2,6 +2,7 @@ import { Menu, Text } from '@mantine/core'
 import { IconExternalLink } from '@tabler/icons-react'
 import { useJupyterInstances } from '../data/queries/useJupyterInstances'
 import { maskIp } from '../lib/maskIp'
+import { CoreIcon } from '@/shared/ui'
 
 /**
  * The Jupyter Lab URLs dropdown's content — every known instance (from GET
@@ -23,7 +24,7 @@ export const JupyterUrlsMenuItems = () => {
       {rows.map((row) => (
         <Menu.Item
           key={row.taskId}
-          leftSection={<IconExternalLink size={14} stroke={1.8} />}
+          leftSection={<CoreIcon icon={<IconExternalLink stroke={1.8} />} size={14} />}
           onClick={() => window.open(row.url, '_blank', 'noopener,noreferrer')}
         >
           <Text size="sm" fw={600}>

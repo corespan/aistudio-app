@@ -1,6 +1,7 @@
 import { Button, Card, Container, Group, Stack } from '@mantine/core'
 import { IconPlus } from '@tabler/icons-react'
 import { PageShell } from '@/app/layout/PageShell'
+import { CoreIcon } from '@/shared/ui'
 import { useStartBenchmarkModalStore } from './store/useStartBenchmarkModalStore'
 import { ConfigureBenchmarkRun } from './components/ConfigureBenchmarkRun'
 import { BenchmarkKpiCards } from './components/BenchmarkKpiCards'
@@ -19,7 +20,11 @@ export const Benchmarks = () => {
         <Container fluid pt="lg" px="lg" pb="xl" h="100%">
           <Stack gap="md" h="100%" style={{ minHeight: 0 }}>
             <Group justify="flex-end">
-              <Button size="sm" leftSection={<IconPlus size={16} />} onClick={openModal}>
+              <Button
+                size="sm"
+                leftSection={<CoreIcon icon={<IconPlus />} size={16} />}
+                onClick={openModal}
+              >
                 Start Benchmark
               </Button>
             </Group>

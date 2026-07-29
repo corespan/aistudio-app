@@ -15,7 +15,7 @@ import {
   useMantineColorScheme,
 } from '@mantine/core'
 import { IconSearch } from '@tabler/icons-react'
-import { CoreChart } from '@/shared/ui'
+import { CoreChart, CoreIcon } from '@/shared/ui'
 import type { EChartsOption } from 'echarts'
 import type { BenchmarkRun } from '../types'
 import { useBenchmarks } from '../data/queries/useBenchmarks'
@@ -432,7 +432,7 @@ export const BenchmarkMetricChart = () => {
               <TextInput
                 placeholder="Search GPU"
                 size="sm"
-                leftSection={<IconSearch size={13} />}
+                leftSection={<CoreIcon icon={<IconSearch />} size={13} />}
                 value={search}
                 onChange={(e) => setSearch(e.currentTarget.value)}
               />

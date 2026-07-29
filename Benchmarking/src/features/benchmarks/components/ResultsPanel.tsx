@@ -4,6 +4,7 @@ import { IconChartLine, IconTable } from '@tabler/icons-react'
 import { BenchmarkMetricChart } from './BenchmarkMetricChart'
 import { BenchmarksTable } from './BenchmarksTable'
 import type { ResultsView } from '../types'
+import { CoreIcon } from '@/shared/ui'
 
 /**
  * Chart/Table toggle for the benchmark results panel. Owns which view is
@@ -24,7 +25,7 @@ export const ResultsPanel = () => {
               value: 'chart',
               label: (
                 <Group gap={6} wrap="nowrap">
-                  <IconChartLine size={14} />
+                  <CoreIcon icon={<IconChartLine />} size={14} />
                   Chart
                 </Group>
               ),
@@ -33,7 +34,7 @@ export const ResultsPanel = () => {
               value: 'table',
               label: (
                 <Group gap={6} wrap="nowrap">
-                  <IconTable size={14} />
+                  <CoreIcon icon={<IconTable />} size={14} />
                   Table
                 </Group>
               ),
