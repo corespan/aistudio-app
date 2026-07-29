@@ -21,6 +21,7 @@ import type { BenchmarkRun } from '../types'
 import { useBenchmarks } from '../data/queries/useBenchmarks'
 import { useBenchmarkFiltersStore } from '../store/useBenchmarkFiltersStore'
 import { colorForGpuType, normalizeGpuType } from '../lib/gpuColors'
+import { maskIp } from '../lib/maskIp'
 import { CHART_METRICS, CHART_METRIC_BY_TYPE } from '../constants'
 
 // Convert a hex color to rgba so we can build translucent gradient stops.
@@ -100,7 +101,7 @@ const runTooltipHtml = (run: BenchmarkRun, accentColor: string) => {
       ${sectionLabel('Details')}
       <table style="width:100%;border-collapse:collapse">
         ${row('Run ID', run.runId || '—')}
-        ${row('Node', run.machineIp || '—')}
+        ${row('Node', maskIp(run.machineIp) || '—')}
         <tr>
           <td style="padding:1px 10px 1px 0;color:var(--mantine-color-dimmed);white-space:nowrap">Status</td>
           <td style="padding:1px 0;font-weight:600;text-align:right;color:${statusColor};white-space:nowrap">

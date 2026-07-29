@@ -5,6 +5,7 @@ import { useRunStreamsStore } from '../store/useRunStreamsStore'
 import { LogStreamView } from './LogStreamView'
 import type { RunStream, RunSwitcherItemProps } from '../types'
 import { RUN_SWITCHER_STATUS_COLOR } from '../constants'
+import { maskIp } from '../lib/maskIp'
 
 // Most-recent run first, so the just-started run lands at the top of the switcher.
 const byStartedDesc = (a: RunStream, b: RunStream) => b.startedAt.localeCompare(a.startedAt)
@@ -30,8 +31,8 @@ const RunSwitcherItem = memo(({ run, active, onSelect }: RunSwitcherItemProps) =
             {run.model ?? 'Benchmark run'}
           </Text>
           {run.nodeIp && (
-            <Text size="xs" c="dimmed" truncate title={run.nodeIp}>
-              Node {run.nodeIp}
+            <Text size="xs" c="dimmed" truncate title={maskIp(run.nodeIp)}>
+              Node {maskIp(run.nodeIp)}
             </Text>
           )}
           <Text size="xs" c="dimmed" ff="monospace" truncate title={run.taskId}>

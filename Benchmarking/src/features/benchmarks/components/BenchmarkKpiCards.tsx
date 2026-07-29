@@ -17,6 +17,7 @@ import {
   IconUsersGroup,
 } from '@tabler/icons-react'
 import { useBenchmarks } from '../data/queries/useBenchmarks'
+import { maskIp } from '../lib/maskIp'
 import type { BenchmarkRun, BenchmarkKpi } from '../types'
 
 const nums = (rows: BenchmarkRun[], sel: (r: BenchmarkRun) => number | null): number[] =>
@@ -88,7 +89,7 @@ const RunTooltip = ({
         ['Precision', run.precision || '—', ''],
         ['Server', run.serverName || '—', ''],
         ['Run ID', run.runId || '—', ''],
-        ['Node', run.machineIp || '—', ''],
+        ['Node', maskIp(run.machineIp) || '—', ''],
       ] as const
     ).map(([label, value, unit]) => (
       <div

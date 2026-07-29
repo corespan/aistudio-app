@@ -61,7 +61,7 @@ export const IMPACT_STATS: ImpactStat[] = [
 // are merged into one combined read the same way 01/02 are. No external image
 // URLs anywhere — every cover and avatar is rendered from Mantine primitives.
 const AUTHOR = 'Corespan Systems'
-const AUTHOR_ROLE = 'Corespan Systems Engineering'
+const AUTHOR_ROLE = 'Corespan Systems'
 
 type PostMeta = Omit<BlogPost, 'chapters' | 'author' | 'authorRole'>
 
