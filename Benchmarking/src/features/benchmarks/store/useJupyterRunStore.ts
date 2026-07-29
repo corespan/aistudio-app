@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { API_ORIGIN } from '@/shared/api/config'
+import { queryClient } from '@/shared/api/queryClient'
+import { jupyterKeys } from '../data/keys'
 import type { JupyterRun, JupyterRunStore } from '../types'
 
 // The notebook URL isn't in the launch response — it arrives later in the log
@@ -60,7 +62,14 @@ export const useJupyterRunStore = create<JupyterRunStore>((set, get) => {
       s.addEventListener('close', (event: MessageEvent) => {
         s.close()
         if (source === s) source = null
-        patch({ status: event.data === 'FAILED' ? 'failed' : 'closed' })
+        const isFailed = event.data === 'FAILED'
+        patch({ status: isFailed ? 'failed' : 'closed' })
+        // Only refetch the instances list once the stream itself reports success
+        // (not on a failed launch) — that's when the new instance actually exists
+        // for GET /jupyter/instances to return.
+        if (!isFailed) {
+          void queryClient.invalidateQueries({ queryKey: jupyterKeys.instances() })
+        }
       })
 
       s.onerror = () => {
