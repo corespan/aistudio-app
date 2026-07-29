@@ -86,9 +86,9 @@ const RunTooltip = ({
         ['GPU', run.gpuType || '—', ''],
         ['GPU Count', fmt(run.gpuCount, 0), ''],
         ['Precision', run.precision || '—', ''],
-        ['Server', run.serverName || '—', ''],
+        ['Chasis', run.serverName || '—', ''],
         ['Run ID', run.runId || '—', ''],
-        ['Node', run.machineIp || '—', ''],
+        // ['Node', run.machineIp || '—', ''],
       ] as const
     ).map(([label, value, unit]) => (
       <div

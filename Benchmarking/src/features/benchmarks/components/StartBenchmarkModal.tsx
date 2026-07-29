@@ -282,15 +282,16 @@ export const StartBenchmarkModal = ({ opened, onClose }: StartBenchmarkModalProp
                           ? 'Previously used machines appear as suggestions'
                           : 'Enter the IP address of your GPU machine'
                       }
-                      data={
-                        nodes.data?.flatMap((opt) => {
-                          if (typeof opt === 'string') return [opt]
-                          if ('value' in opt) return [opt.value]
-                          return opt.items.map((item) =>
-                            typeof item === 'string' ? item : item.value,
-                          )
-                        }) ?? []
-                      }
+                      // Dropdown suggestions disabled — keep this a plain text input for now.
+                      // data={
+                      //   nodes.data?.flatMap((opt) => {
+                      //     if (typeof opt === 'string') return [opt]
+                      //     if ('value' in opt) return [opt.value]
+                      //     return opt.items.map((item) =>
+                      //       typeof item === 'string' ? item : item.value,
+                      //     )
+                      //   }) ?? []
+                      // }
                       value={nodeIp}
                       onChange={(val) => form.setValue('nodeIp', val, { shouldValidate: true })}
                       onBlur={() => form.trigger('nodeIp')}

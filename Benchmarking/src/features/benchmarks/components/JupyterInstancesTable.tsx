@@ -24,19 +24,19 @@ const EMPTY_ROWS: JupyterInstance[] = []
 
 const columns: ColumnDef<JupyterInstance>[] = [
   { accessorKey: 'taskId', header: 'Task ID' },
-  {
-    accessorKey: 'nodeIp',
-    header: 'Node IP',
-    cell: ({ getValue }) => {
-      const ip = getValue<string>()
-      if (!ip) return '—'
-      return (
-        <Tooltip label={ip} withArrow>
-          <span>{maskIp(ip)}</span>
-        </Tooltip>
-      )
-    },
-  },
+  // {
+  //   accessorKey: 'nodeIp',
+  //   header: 'Node IP',
+  //   cell: ({ getValue }) => {
+  //     const ip = getValue<string>()
+  //     if (!ip) return '—'
+  //     return (
+  //       <Tooltip label={ip} withArrow>
+  //         <span>{maskIp(ip)}</span>
+  //       </Tooltip>
+  //     )
+  //   },
+  // },
   {
     accessorKey: 'state',
     header: 'State',
