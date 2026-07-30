@@ -7,6 +7,8 @@ const GPU_PALETTE = [
   '#06b6d4',
   '#ef4444',
   '#84cc16',
+  '#6366f1',
+  '#14b8a6',
 ]
 
 // Values that mean "no real GPU type" even though they're non-empty strings —
@@ -30,7 +32,21 @@ const hashString = (value: string) => {
   return hash >>> 0
 }
 
+// First-seen GPU type claims the next unused palette color, so two GPUs never
+// share a color as long as the count of distinct types seen so far doesn't
+// exceed the palette — unlike a plain hash, which can (and did) collide two
+// different strings onto the same index regardless of how few types exist.
+// The assignment is a module-level singleton so it stays stable for the
+// lifetime of the page, across every component that calls this.
+const colorAssignments = new Map<string, string>()
+
 export const colorForGpuType = (gpuType: string) => {
-  const idx = hashString(gpuType) % GPU_PALETTE.length
-  return GPU_PALETTE[idx]
+  const assigned = colorAssignments.get(gpuType)
+  if (assigned) return assigned
+
+  const used = new Set(colorAssignments.values())
+  const color =
+    GPU_PALETTE.find((c) => !used.has(c)) ?? GPU_PALETTE[hashString(gpuType) % GPU_PALETTE.length]
+  colorAssignments.set(gpuType, color)
+  return color
 }

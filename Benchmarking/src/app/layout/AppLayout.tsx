@@ -12,7 +12,6 @@ import {
   Stack,
   Text,
   Tooltip,
-  useMantineColorScheme,
 } from '@mantine/core'
 import {
   IconChevronDown,
@@ -44,7 +43,6 @@ import {
 } from '@/app/constants'
 
 export const AppLayout = () => {
-  const { colorScheme } = useMantineColorScheme()
   const location = useLocation()
   const navigate = useNavigate()
   // Benchmarks is the landing page, so it lives at the app root (`/aistudio`
@@ -122,7 +120,7 @@ export const AppLayout = () => {
               }
               childrenOffset={16}
               active={isActive}
-              variant={colorScheme === 'light' ? 'filled' : 'light'}
+              variant="filled"
               onClick={() => navigate(pathForKey(child.key))}
               h={38}
               noWrap
@@ -193,7 +191,7 @@ export const AppLayout = () => {
     <>
       <AppShell
         navbar={{ width: NAVBAR_WIDTH, breakpoint: 'sm' }}
-        footer={{ height: { base: 76, sm: 76 } }}
+        footer={{ height: { base: 60, sm: 60 } }}
         h="100vh"
       >
         <AppShell.Navbar

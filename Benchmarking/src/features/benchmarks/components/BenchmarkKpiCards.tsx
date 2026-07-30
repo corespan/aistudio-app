@@ -1,11 +1,12 @@
 import {
   Badge,
   Card,
+  Flex,
   Group,
   SimpleGrid,
   Skeleton,
+  Stack,
   Text,
-  ThemeIcon,
   Tooltip,
   useMantineColorScheme,
 } from '@mantine/core'
@@ -16,6 +17,7 @@ import {
   IconGauge,
   IconUsersGroup,
 } from '@tabler/icons-react'
+import { CoreIcon } from '@/shared/ui'
 import { useBenchmarks } from '../data/queries/useBenchmarks'
 import type { BenchmarkRun, BenchmarkKpi } from '../types'
 
@@ -197,49 +199,58 @@ export const BenchmarkKpiCards = () => {
     <SimpleGrid cols={{ base: 1, xs: 2, sm: 3, lg: 5 }} spacing="md">
       {kpis.map((kpi) => {
         const card = (
-          <Card key={kpi.key} withBorder radius="md" padding="lg" shadow="sm">
-            <Group justify="space-between" align="flex-start" wrap="nowrap">
-              <ThemeIcon
-                size={44}
-                radius="md"
-                variant="gradient"
-                gradient={{ from: `${kpi.color}.7`, to: `${kpi.color}.4`, deg: 135 }}
-              >
-                <kpi.Icon size={22} stroke={1.9} />
-              </ThemeIcon>
-              {kpi.hint && (
-                <Badge variant="light" color={kpi.color} size="sm" radius="sm">
-                  {kpi.hint}
-                </Badge>
-              )}
-            </Group>
-
-            <Text mt="md" size="xs" fw={700} tt="uppercase" c="dimmed">
-              {kpi.label}
-            </Text>
-
-            <Group gap={6} align="baseline" wrap="nowrap" mt={2}>
-              {isLoading ? (
-                <Skeleton height={30} width={80} radius="sm" mt={4} />
-              ) : (
-                <>
-                  <Text fz={32} fw={800} lh={1}>
-                    {kpi.value}
-                  </Text>
-                  {kpi.unit && kpi.value !== '—' && (
-                    <Text component="span" c={kpi.color} fw={700} size="sm">
-                      {kpi.unit}
-                    </Text>
+          <Card key={kpi.key} withBorder radius="md" padding="lg" shadow="sm" h={155}>
+            <Flex justify="space-between" align="stretch" gap="sm" wrap="nowrap" h="100%">
+              {/* Left half: value, eyebrow, caption — kept close together
+                  and vertically centered. */}
+              <Stack gap={14} justify="center" style={{ flex: 1, minWidth: 0 }}>
+                <Group gap={6} align="baseline" wrap="nowrap">
+                  {isLoading ? (
+                    <Skeleton height={30} width={80} radius="sm" />
+                  ) : (
+                    <>
+                      <Text fz={38} fw={800} lh={1}>
+                        {kpi.value}
+                      </Text>
+                      {kpi.unit && kpi.value !== '—' && (
+                        <Text component="span" fw={700} size="sm">
+                          {kpi.unit}
+                        </Text>
+                      )}
+                    </>
                   )}
-                </>
-              )}
-            </Group>
+                </Group>
 
-            {kpi.caption && (
-              <Text mt={6} size="xs" c="dimmed" truncate>
-                {kpi.caption}
-              </Text>
-            )}
+                <Text size="xs" fw={700} tt="uppercase" c="dimmed">
+                  {kpi.label}
+                </Text>
+
+                {kpi.caption && (
+                  <Text size="xs" c="dimmed" truncate>
+                    {kpi.caption}
+                  </Text>
+                )}
+              </Stack>
+
+              {/* Right half: icon pinned top-right, badge pinned bottom-right —
+                  `justify="space-between"` on a single-icon column with no
+                  badge still lands the icon at the top, so this holds up for
+                  the one KPI (Peak Concurrency) that has no hint. */}
+              <Stack gap="sm" justify="space-between" align="flex-end">
+                {/* Bare accent glyph — no container. Routed through CoreIcon
+                    so the stroke is pinned to 1.5, matching every other icon. */}
+                <CoreIcon
+                  icon={<kpi.Icon />}
+                  size={26}
+                  color={`var(--mantine-color-${kpi.color}-6)`}
+                />
+                {kpi.hint && (
+                  <Badge variant="light" color={kpi.color} size="xs" radius="sm">
+                    {kpi.hint}
+                  </Badge>
+                )}
+              </Stack>
+            </Flex>
           </Card>
         )
 

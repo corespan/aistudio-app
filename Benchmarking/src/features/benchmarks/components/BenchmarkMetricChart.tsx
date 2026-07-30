@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import {
   Box,
   Center,
@@ -16,17 +16,29 @@ import {
 } from '@mantine/core'
 import { IconSearch } from '@tabler/icons-react'
 import { CoreChart, CoreIcon } from '@/shared/ui'
-import type { EChartsOption } from 'echarts'
+import type { ECharts, EChartsOption } from 'echarts'
 import type { BenchmarkRun } from '../types'
 import { useBenchmarks } from '../data/queries/useBenchmarks'
 import { useBenchmarkFiltersStore } from '../store/useBenchmarkFiltersStore'
 import { colorForGpuType, normalizeGpuType } from '../lib/gpuColors'
 import { CHART_METRICS, CHART_METRIC_BY_TYPE } from '../constants'
+import { APP_THEME } from '@/app/constants'
 
 // Convert a hex color to rgba so we can build translucent gradient stops.
 const rgba = (hex: string, alpha: number) => {
   const n = parseInt(hex.slice(1), 16)
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`
+}
+
+// Blend a hex color toward black. The end-label pills fill with a darkened
+// shade so white text clears the WCAG AA 4.5:1 floor on every palette color —
+// at full brightness the mid-tone limes, ambers, and greens sit as low as
+// 2:1 against white. At 40% this palette lands between 5.1:1 and 9.3:1.
+const darken = (hex: string, amount: number) => {
+  const n = parseInt(hex.slice(1), 16)
+  const f = 1 - amount
+  const ch = (shift: number) => Math.round(((n >> shift) & 255) * f)
+  return `rgb(${ch(16)}, ${ch(8)}, ${ch(0)})`
 }
 
 const fmtNum = (v: number | null, unit = '') =>
@@ -125,6 +137,11 @@ export const BenchmarkMetricChart = () => {
   const [hiddenGpus, setHiddenGpus] = useState<Set<string>>(new Set())
   const [search, setSearch] = useState('')
   const [showLabels, setShowLabels] = useState(true)
+  // Escape hatch into the ECharts instance, so "Reset zoom" can dispatchAction
+  // without CoreChart needing to expose any zoom-specific API of its own.
+  const chartInstanceRef = useRef<ECharts | null>(null)
+  const resetZoom = () =>
+    chartInstanceRef.current?.dispatchAction({ type: 'dataZoom', start: 0, end: 100 })
 
   const toggleGpu = (gpu: string) =>
     setHiddenGpus((prev) => {
@@ -152,7 +169,6 @@ export const BenchmarkMetricChart = () => {
   ]
     .sort()
     .map((gpu) => ({ gpu, color: colorForGpuType(gpu) }))
-  const colorForGpu = (gpu: string) => colorForGpuType(gpu)
 
   const visiblePanelEntries = gpuColorEntries.filter(({ gpu }) =>
     gpu.toLowerCase().includes(search.trim().toLowerCase()),
@@ -169,9 +185,12 @@ export const BenchmarkMetricChart = () => {
       : rows.some((r) => r.concurrency != null && r[metric] != null)
   })()
 
-  // Rebuilt on every render, straight from `data` — no memoization, so the
-  // chart always reflects exactly what the endpoint returned.
-  const option = ((): EChartsOption => {
+  // Memoized so CoreChart's update effect (keyed on this object's identity)
+  // only fires when something the chart actually depends on changes — the
+  // chart now merges updates (see CoreChart) rather than tearing down and
+  // rebuilding, so a stable identity is what lets a user's dataZoom range
+  // survive unrelated re-renders (typing in the search box, etc).
+  const option = useMemo((): EChartsOption => {
     const rows = data ?? []
     const meta = CHART_METRICS.find((m) => m.key === metric)!
 
@@ -182,6 +201,43 @@ export const BenchmarkMetricChart = () => {
     // Neutral chrome — colors now vary per GPU series, so the tooltip/axis
     // pointer border stays theme-neutral rather than tied to one metric color.
     const neutralAccent = isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'
+
+    // X-axis zoom/pan. No `start`/`end` here — omitting them is what lets
+    // CoreChart's merge-based update preserve whatever range the user has
+    // dragged; hardcoding one would re-assert it on every render and silently
+    // undo the zoom. Wheel is off (the chart sits in a page-level ScrollArea
+    // and would otherwise hijack scrolling); drag-to-pan is on instead.
+    const dataZoom = [
+      {
+        type: 'inside' as const,
+        xAxisIndex: 0,
+        filterMode: 'filter' as const,
+        zoomOnMouseWheel: false,
+        moveOnMouseWheel: false,
+        moveOnMouseMove: true,
+      },
+      {
+        type: 'slider' as const,
+        xAxisIndex: 0,
+        filterMode: 'filter' as const,
+        height: 20,
+        bottom: 10,
+        borderColor: axisLine,
+        fillerColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
+        dataBackground: {
+          lineStyle: { color: axisLine },
+          areaStyle: { color: axisLine },
+        },
+        selectedDataBackground: {
+          lineStyle: { color: neutralAccent },
+          areaStyle: { color: neutralAccent },
+        },
+        handleStyle: { color: neutralAccent, borderColor: neutralAccent },
+        textStyle: { color: axisText },
+        moveHandleStyle: { color: axisLine },
+        emphasis: { handleStyle: { color: neutralAccent } },
+      },
+    ]
 
     const tooltip = {
       trigger: 'axis' as const,
@@ -204,8 +260,9 @@ export const BenchmarkMetricChart = () => {
     }
 
     // Every run's GPU type (falling back to "Unknown" when unset), minus any
-    // toggled off in the side panel. Colors come from `colorForGpu`, so they
-    // stay consistent with the panel even if a GPU has no points for this metric.
+    // toggled off in the side panel. Colors come from `colorForGpuType`, so
+    // they stay consistent with the panel even if a GPU has no points for
+    // this metric.
     const gpuTypesOf = (list: BenchmarkRun[]) =>
       [...new Set(list.map((r) => normalizeGpuType(r.gpuType)).filter((g): g is string => !!g))]
         .filter((gpu) => !hiddenGpus.has(gpu))
@@ -216,18 +273,27 @@ export const BenchmarkMetricChart = () => {
       name: 'Concurrency',
       nameLocation: 'middle' as const,
       nameGap: 32,
-      nameTextStyle: { color: axisText, fontWeight: 600 },
+      nameTextStyle: { color: axisText, fontWeight: 500 },
       axisLine: { lineStyle: { color: axisLine } },
-      axisLabel: { show: true, color: axisText, formatter: (v: number) => String(Math.round(v)) },
+      axisLabel: {
+        show: true,
+        color: axisText,
+        fontWeight: 500,
+        formatter: (v: number) => String(Math.round(v)),
+      },
       axisTick: { show: true },
       splitLine: { lineStyle: { color: splitLine, type: 'dashed' as const } },
     }
 
     const yAxisBase = {
       name: meta.label,
-      nameTextStyle: { color: axisText, fontWeight: 600 },
+      // ECharts' default (15) sits the name's text box right on top of the
+      // highest tick label, so the two collide. `grid.top` below is sized to
+      // clear this gap — raise them together.
+      nameGap: 28,
+      nameTextStyle: { color: axisText, fontWeight: 500 },
       axisLine: { lineStyle: { color: axisLine } },
-      axisLabel: { show: true, color: axisText },
+      axisLabel: { show: true, color: axisText, fontWeight: 500 },
       axisTick: { show: true },
       splitLine: { lineStyle: { color: splitLine, type: 'dashed' as const } },
     }
@@ -239,8 +305,18 @@ export const BenchmarkMetricChart = () => {
       formatter: '{a}',
       color: '#fff',
       fontSize: 10,
-      fontWeight: 600,
-      backgroundColor: color,
+      // Canvas-rendered text has no CSS line-height to inherit — ECharts'
+      // own default line height is taller than the glyph box, which pushes
+      // the label toward the top of its padded pill. lineHeight is number-only
+      // (no CSS 'normal' keyword support), so this is set explicitly.
+      lineHeight: 16,
+      fontWeight: 500,
+      backgroundColor: darken(color, 0.4),
+      // Keep the pill outlined in the series' own full-brightness color: it
+      // ties the label back to its line and lifts the darkened fill off the
+      // dark-mode surface, which it would otherwise sit very close to.
+      borderColor: color,
+      borderWidth: 1,
       padding: [2, 6] as [number, number],
       borderRadius: 4,
       distance: 8,
@@ -255,7 +331,7 @@ export const BenchmarkMetricChart = () => {
       const gpuTypes = gpuTypesOf(plottable)
 
       const series = gpuTypes.map((gpu) => {
-        const color = colorForGpu(gpu)
+        const color = colorForGpuType(gpu)
         const points = plottable
           .filter((r) => normalizeGpuType(r.gpuType) === gpu)
           .map((r) => ({ value: [r.concurrency as number, r.precision], run: r }))
@@ -286,13 +362,20 @@ export const BenchmarkMetricChart = () => {
 
       return {
         backgroundColor: 'transparent',
+        // Canvas text can't inherit the page's font, so the chart is given the
+        // app's own stack explicitly — otherwise ECharts falls back to its
+        // default sans-serif and the chart reads as a different typeface.
+        textStyle: { fontFamily: APP_THEME.fontFamily },
         animationDuration: 700,
         animationEasing: 'cubicOut',
         tooltip: categoryTooltip,
-        grid: { left: 88, right: 28, top: 28, bottom: 52 },
+        // bottom raised from 52 to clear the dataZoom slider (height 20,
+        // bottom 10) sitting below the axis name.
+        grid: { left: 88, right: 28, top: 52, bottom: 96 },
         xAxis,
         yAxis: { type: 'category', data: categories, ...yAxisBase },
         series,
+        dataZoom,
       }
     }
 
@@ -312,7 +395,7 @@ export const BenchmarkMetricChart = () => {
     }
 
     const series = gpuTypes.map((gpu) => {
-      const color = colorForGpu(gpu)
+      const color = colorForGpuType(gpu)
       const points = plottable
         .filter((r) => normalizeGpuType(r.gpuType) === gpu)
         .map((r) => ({ value: [r.concurrency as number, r[metric] as number], run: r }))
@@ -332,11 +415,8 @@ export const BenchmarkMetricChart = () => {
         showSymbol: true,
         endLabel: endLabel(color),
         lineStyle: {
-          width: 3.5,
+          width: 2,
           color,
-          shadowBlur: 12,
-          shadowColor: rgba(color, 0.5),
-          shadowOffsetY: 4,
         },
         itemStyle: {
           color,
@@ -376,25 +456,22 @@ export const BenchmarkMetricChart = () => {
 
     return {
       backgroundColor: 'transparent',
+      textStyle: { fontFamily: APP_THEME.fontFamily },
       animationDuration: 800,
       animationEasing: 'cubicOut',
       tooltip: numericTooltip,
-      grid: { left: 64, right: 72, top: 28, bottom: 52 },
+      // bottom raised from 52 to clear the dataZoom slider (height 20,
+      // bottom 10) sitting below the axis name.
+      grid: { left: 64, right: 72, top: 52, bottom: 96 },
       xAxis,
       yAxis: { type: 'value', ...yAxisBase },
       series,
+      dataZoom,
     }
-  })()
+  }, [data, metric, isDark, hiddenGpus, showLabels])
 
   return (
     <Box h="100%" style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-      <Group justify="space-between" mb="sm">
-        <Text fw={600}>Metric vs Concurrency</Text>
-        <Text size="sm" c="dimmed">
-          {CHART_METRICS.find((m) => m.key === metric)?.label}
-        </Text>
-      </Group>
-
       <Flex gap="md" align="stretch" wrap="nowrap" style={{ flex: '1 1 auto', minHeight: 0 }}>
         <Box style={{ flex: '1 1 auto', minWidth: 0, minHeight: 0 }}>
           {!hasData ? (
@@ -406,7 +483,7 @@ export const BenchmarkMetricChart = () => {
               </Text>
             </Center>
           ) : (
-            <CoreChart option={option} />
+            <CoreChart option={option} instanceRef={chartInstanceRef} />
           )}
         </Box>
 
@@ -503,13 +580,25 @@ export const BenchmarkMetricChart = () => {
                 />
               </Stack>
 
-              {(hiddenGpus.size > 0 || search) && (
-                <UnstyledButton onClick={resetFilters}>
+              <Group gap="md">
+                {/* Unconditional — dispatching a full-range dataZoom while
+                    already at full range is a harmless no-op, and tracking
+                    "is currently zoomed" would mean mirroring the chart's
+                    live drag state into React just to gate this button. */}
+                <UnstyledButton onClick={resetZoom}>
                   <Text size="xs" c="indigo" fw={500}>
-                    Reset filter
+                    Reset zoom
                   </Text>
                 </UnstyledButton>
-              )}
+
+                {(hiddenGpus.size > 0 || search) && (
+                  <UnstyledButton onClick={resetFilters}>
+                    <Text size="xs" c="indigo" fw={500}>
+                      Reset filter
+                    </Text>
+                  </UnstyledButton>
+                )}
+              </Group>
             </Stack>
           </Paper>
         )}

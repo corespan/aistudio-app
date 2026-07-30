@@ -1,4 +1,13 @@
-import { Card, Paper, ScrollArea, Select, type CSSVariablesResolver } from '@mantine/core'
+import {
+  Badge,
+  Button,
+  Card,
+  Paper,
+  ScrollArea,
+  SegmentedControl,
+  Select,
+  type CSSVariablesResolver,
+} from '@mantine/core'
 import type { ComponentType } from 'react'
 import {
   IconArticle,
@@ -47,11 +56,49 @@ const APP_THEME = {
   scale: APP_SCALE,
   fontFamily:
     '-apple-system, BlinkMacSystemFont, Inter, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji',
+  // Mantine's default line-height (1.55) leaves extra space below the
+  // glyph baseline, which reads as text sitting near the top of any
+  // vertically-centered container (buttons, nav items, inputs, etc.).
+  // `normal` uses the font's own metrics so it centers correctly.
+  lineHeight: 'normal',
   components: {
     Select: Select.extend({
       defaultProps: {
         allowDeselect: false,
         comboboxProps: { shadow: 'lg' },
+      },
+    }),
+    // Badge.module.css hardcodes its own `line-height` (derived from the
+    // badge height), which ignores the theme-level line-height above —
+    // override it explicitly so badge text centers the same way.
+    Badge: Badge.extend({
+      styles: {
+        root: { lineHeight: 'normal' },
+      },
+    }),
+    // Button pins `line-height: 1` on its root and centers the label with
+    // `text-box-trim`, which only lands correctly on browsers that support it.
+    // Everywhere else the label inherits that `1` and, with Inter's metrics,
+    // sits high in the control — so set the line-height explicitly on both.
+    Button: Button.extend({
+      styles: {
+        root: { lineHeight: 'normal' },
+        label: { lineHeight: 'normal' },
+      },
+    }),
+    // SegmentedControl's label is a plain `display: block` with symmetric
+    // padding and no line-height of its own, so it inherits `normal` — and
+    // Inter's asymmetric ascent/descent then seats the text off-centre against
+    // any icon sitting beside it. Centre the label explicitly instead of
+    // leaving it to the line box.
+    SegmentedControl: SegmentedControl.extend({
+      styles: {
+        label: {
+          lineHeight: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
       },
     }),
     Card: Card.extend({
@@ -77,9 +124,6 @@ const APP_THEME = {
 
 // AppFooter
 const REPO_URL = 'https://github.com/corespan/aistudio-app'
-// Height of the visible gap above the footer bar — matches the page's own
-// background so it reads as breathing room, not part of the footer itself.
-const TOP_GAP = 12
 
 // AppLayout
 type SectionKey = 'benchmarks' | 'jupyter' | 'blogs' | 'about'
@@ -119,7 +163,6 @@ export {
   HEADER_HEIGHT,
   HEADER_OFFSET,
   REPO_URL,
-  TOP_GAP,
   NAV_GROUPS,
   NAVBAR_WIDTH,
   NAVBAR_COLLAPSED_WIDTH,
