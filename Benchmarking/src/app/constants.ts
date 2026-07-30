@@ -155,6 +155,7 @@ const NAV_GROUPS: NavGroup[] = [
 
 const NAVBAR_WIDTH = 248
 const NAVBAR_COLLAPSED_WIDTH = 48
+const JUPYTER_PANEL_WIDTH = 240
 
 export {
   APP_THEME,
@@ -166,5 +167,6 @@ export {
   NAV_GROUPS,
   NAVBAR_WIDTH,
   NAVBAR_COLLAPSED_WIDTH,
+  JUPYTER_PANEL_WIDTH,
 }
 export type { SectionKey, Section, NavGroup }
