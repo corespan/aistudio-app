@@ -210,13 +210,21 @@ export const AppLayout = () => {
                 below the shared header above. */}
             {active === 'jupyter' && (
               <Paper
-                withBorder
+                // Theme sets `withBorder: true` as a Paper-wide default
+                // (constants.ts), which draws all four sides — has to be
+                // overridden explicitly here, omitting the prop is not enough.
+                withBorder={false}
                 radius={0}
                 shadow="none"
+                p={0}
                 w={JUPYTER_PANEL_WIDTH}
                 h="100%"
                 visibleFrom="sm"
-                style={{ flex: `0 0 ${JUPYTER_PANEL_WIDTH}px`, overflow: 'hidden' }}
+                style={{
+                  flex: `0 0 ${JUPYTER_PANEL_WIDTH}px`,
+                  overflow: 'hidden',
+                  borderRight: '1px solid var(--app-shell-border-color)',
+                }}
               >
                 <JupyterUrlsPanel />
               </Paper>

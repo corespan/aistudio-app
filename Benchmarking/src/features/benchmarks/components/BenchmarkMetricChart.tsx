@@ -203,20 +203,22 @@ export const BenchmarkMetricChart = () => {
     // pointer border stays theme-neutral rather than tied to one metric color.
     const neutralAccent = isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'
 
-    // X-axis zoom/pan. No `start`/`end` here — omitting them is what lets
-    // CoreChart's merge-based update preserve whatever range the user has
-    // dragged; hardcoding one would re-assert it on every render and silently
-    // undo the zoom. Wheel is off (the chart sits in a page-level ScrollArea
-    // and would otherwise hijack scrolling); drag-to-pan is on instead.
+    // X-axis zoom via the slider only — no `start`/`end` here — omitting
+    // them is what lets CoreChart's merge-based update preserve whatever
+    // range the user has dragged; hardcoding one would re-assert it on every
+    // render and silently undo the zoom.
+    //
+    // Deliberately no `'inside'` dataZoom entry: merely having one present
+    // makes ECharts attach a wheel listener over the *whole* plot area that
+    // calls preventDefault/stopPropagation before it ever checks
+    // zoomOnMouseWheel/moveOnMouseWheel — so even with both set to false, it
+    // silently swallowed the page's wheel-scroll whenever the cursor was
+    // over the chart. There's no flag to opt out of that (confirmed against
+    // the installed ECharts source — no `preventDefaultMouseWheel` exists).
+    // Slider-only avoids creating that listener at all, at the cost of
+    // losing "drag anywhere on the chart to pan" — zoom/pan are still
+    // available by dragging the slider's handles/window.
     const dataZoom = [
-      {
-        type: 'inside' as const,
-        xAxisIndex: 0,
-        filterMode: 'filter' as const,
-        zoomOnMouseWheel: false,
-        moveOnMouseWheel: false,
-        moveOnMouseMove: true,
-      },
       {
         type: 'slider' as const,
         xAxisIndex: 0,

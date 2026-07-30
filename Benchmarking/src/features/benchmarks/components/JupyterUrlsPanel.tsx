@@ -1,4 +1,4 @@
-import { Box, Group, ScrollArea, Stack, Text, Tooltip, UnstyledButton } from '@mantine/core'
+import { Box, Group, ScrollArea, Stack, Text, UnstyledButton } from '@mantine/core'
 import { IconExternalLink } from '@tabler/icons-react'
 import { useJupyterInstances } from '../data/queries/useJupyterInstances'
 import { CoreIcon } from '@/shared/ui'
@@ -33,7 +33,7 @@ export const JupyterUrlsPanel = () => {
 
       <Box flex={1} mih={0}>
         <ScrollArea h="100%" type="auto" scrollbarSize={5} offsetScrollbars>
-          <Stack gap={4} px="xs" py="xs">
+          <Stack gap={6} px="xs" py="xs">
             {rows.length === 0 ? (
               <Text size="xs" c="dimmed" ta="center" py="xl">
                 No instances yet
@@ -58,10 +58,6 @@ export const JupyterUrlsPanel = () => {
                     }}
                   >
                     <Group gap={8} wrap="nowrap" align="flex-start">
-                      <Tooltip label={row.state || 'unknown'} withArrow>
-                        <span className={classes.dot} />
-                      </Tooltip>
-
                       <Stack gap={1} style={{ minWidth: 0, flex: 1 }}>
                         <Text size="sm" fw={700} ff="monospace" truncate title={row.url}>
                           {host}
@@ -73,12 +69,8 @@ export const JupyterUrlsPanel = () => {
                         )}
                       </Stack>
 
-                      <Box mt={4}>
-                        <CoreIcon
-                          icon={<IconExternalLink stroke={1.8} />}
-                          size={13}
-                          color="var(--mantine-color-dimmed)"
-                        />
+                      <Box mt={4} className={classes.icon}>
+                        <CoreIcon icon={<IconExternalLink stroke={1.8} />} size={13} />
                       </Box>
                     </Group>
                   </UnstyledButton>

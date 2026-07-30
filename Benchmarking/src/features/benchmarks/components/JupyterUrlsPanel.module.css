@@ -10,11 +10,11 @@
   border-color: var(--mantine-color-default-border);
 }
 
-.dot {
-  flex-shrink: 0;
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  margin-top: 6px;
-  background-color: var(--mantine-color-gray-5);
+.icon {
+  color: var(--mantine-color-dimmed);
+  transition: color 100ms ease;
+}
+
+.row:hover .icon {
+  color: var(--mantine-color-blue-6);
 }
