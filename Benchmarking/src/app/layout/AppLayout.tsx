@@ -24,6 +24,7 @@ import {
   IconUserCircle,
 } from '@tabler/icons-react'
 import { useState } from 'react'
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router'
 import { AppFooter } from '@/app/layout/AppFooter'
 import { CoreIcon } from '@/shared/ui'
 import { Benchmarks } from '@/features/benchmarks/Benchmarks'
@@ -32,6 +33,7 @@ import { JupyterUrlsMenuItems } from '@/features/benchmarks/components/JupyterUr
 import { DbHealthIndicator } from '@/features/benchmarks/components/DbHealthIndicator'
 import { AboutUs } from '@/features/about/AboutUs'
 import { BlogsPage } from '@/features/blogs/BlogsPage'
+import { BLOG_POSTS } from '@/features/blogs/constants'
 import {
   HEADER_HEIGHT,
   NAV_GROUPS,
@@ -43,8 +45,20 @@ import {
 
 export const AppLayout = () => {
   const { colorScheme } = useMantineColorScheme()
-  // Benchmarks is the default landing section — it hosts the existing UI.
-  const [active, setActive] = useState<SectionKey>('benchmarks')
+  const location = useLocation()
+  const navigate = useNavigate()
+  // Benchmarks is the landing page, so it lives at the app root (`/aistudio`
+  // itself) rather than `/aistudio/benchmarks` — every other section gets its
+  // own `/aistudio/<key>` path.
+  const pathForKey = (key: SectionKey) => (key === 'benchmarks' ? '/' : `/${key}`)
+  // The active sidebar section is derived straight from the URL — `/blogs`,
+  // `/about`, etc. — instead of separate local state, so a direct link or a
+  // browser refresh always lands on the right page.
+  const active = (NAV_GROUPS.flatMap((group) => group.children).find((child) =>
+    child.key === 'benchmarks'
+      ? location.pathname === '/'
+      : location.pathname.startsWith(pathForKey(child.key)),
+  )?.key ?? 'benchmarks') as SectionKey
   const [isNavbarCollapsed, setIsNavbarCollapsed] = useState(false)
   // Controlled so the whole Launch Jupyter row can toggle it (not just the
   // chevron) and so the chevron's own up/down state can reflect it.
@@ -56,21 +70,15 @@ export const AppLayout = () => {
     setIsNavbarCollapsed(!isNavbarCollapsed)
   }
 
+  // On a single article's route, show its own headline in the top bar instead
+  // of the generic "Blogs" section label.
+  const activeBlogPostTitle = location.pathname.startsWith('/blogs/')
+    ? BLOG_POSTS.find((post) => post.id === location.pathname.split('/blogs/')[1])?.title
+    : undefined
   const pageTitle =
-    NAV_GROUPS.flatMap((group) => group.children).find((child) => child.key === active)?.label ?? ''
-
-  const renderPanel = () => {
-    switch (active) {
-      case 'benchmarks':
-        return <Benchmarks />
-      case 'jupyter':
-        return <LaunchJupyter />
-      case 'blogs':
-        return <BlogsPage />
-      case 'about':
-        return <AboutUs />
-    }
-  }
+    activeBlogPostTitle ??
+    NAV_GROUPS.flatMap((group) => group.children).find((child) => child.key === active)?.label ??
+    ''
 
   const renderMenuItems = (groups: NavGroup[]) => {
     return groups.map((group, index) => {
@@ -115,7 +123,7 @@ export const AppLayout = () => {
               childrenOffset={16}
               active={isActive}
               variant={colorScheme === 'light' ? 'filled' : 'light'}
-              onClick={() => setActive(child.key)}
+              onClick={() => navigate(pathForKey(child.key))}
               h={38}
               noWrap
             />
@@ -271,7 +279,14 @@ export const AppLayout = () => {
 
           <Box flex={1} mih={0} bg="var(--core-surface-1)" style={{ overflow: 'hidden' }}>
             <ScrollArea h="100%" type="scroll" scrollbarSize={6}>
-              {renderPanel()}
+              <Routes>
+                <Route path="/" element={<Benchmarks />} />
+                <Route path="/jupyter" element={<LaunchJupyter />} />
+                <Route path="/blogs" element={<BlogsPage />} />
+                <Route path="/blogs/:postId" element={<BlogsPage />} />
+                <Route path="/about" element={<AboutUs />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
             </ScrollArea>
           </Box>
         </AppShell.Main>

@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
+import { useNavigate, useParams } from 'react-router'
 import { Container, Group, Stack, Text, ThemeIcon } from '@mantine/core'
 import { IconAlertTriangle, IconLayoutGrid, IconStarFilled } from '@tabler/icons-react'
 import { PageShell } from '@/app/layout/PageShell'
@@ -35,23 +36,26 @@ const SectionHeading = ({ icon: Icon, title, subtitle }: SectionHeadingProps) =>
 
 /**
  * Blogs. Two views behind one panel: the index (hero, impact stats, featured
- * post, full grid) and the reading view for a single post. Selecting a card
- * swaps to the article and scrolls back to the top of the panel.
+ * post, full grid) and the reading view for a single post. Which view shows
+ * lives in the URL (`/blogs` vs `/blogs/:postId`) rather than local state, so
+ * an article has its own shareable/refreshable link with its slug in the route.
  */
 export const BlogsPage = () => {
-  const [activeId, setActiveId] = useState<string | null>(null)
+  const { postId } = useParams()
+  const navigate = useNavigate()
   const topRef = useRef<HTMLDivElement>(null)
 
   const featured = BLOG_POSTS.find((post) => post.featured) ?? BLOG_POSTS[0]
   const restCount = BLOG_POSTS.length - 1
-  const activeIndex = BLOG_POSTS.findIndex((post) => post.id === activeId)
+  const activeIndex = BLOG_POSTS.findIndex((post) => post.id === postId)
   const activePost = activeIndex === -1 ? undefined : BLOG_POSTS[activeIndex]
+  const openPost = (id: string) => navigate(`/blogs/${id}`)
 
   // The panel lives inside the app's ScrollArea, so reset scroll on view change
   // rather than relying on window.scrollTo.
   useEffect(() => {
     topRef.current?.scrollIntoView({ block: 'start' })
-  }, [activeId])
+  }, [postId])
 
   return (
     <PageShell>
@@ -63,8 +67,8 @@ export const BlogsPage = () => {
             post={activePost}
             previous={activeIndex > 0 ? BLOG_POSTS[activeIndex - 1] : undefined}
             next={activeIndex < BLOG_POSTS.length - 1 ? BLOG_POSTS[activeIndex + 1] : undefined}
-            onBack={() => setActiveId(null)}
-            onNavigate={setActiveId}
+            onBack={() => navigate('/blogs')}
+            onNavigate={openPost}
           />
         ) : (
           <Stack gap={40}>
@@ -85,7 +89,7 @@ export const BlogsPage = () => {
                 title="Start here"
                 subtitle="The foundational read before the deep-dives"
               />
-              <FeaturedPostCard post={featured} onOpen={setActiveId} />
+              <FeaturedPostCard post={featured} onOpen={openPost} />
             </Stack>
 
             <Stack gap="md" id="all-posts">
@@ -94,7 +98,7 @@ export const BlogsPage = () => {
                 title="All posts"
                 subtitle={`${restCount} more ${restCount === 1 ? 'article' : 'articles'} across every topic`}
               />
-              <BlogsGrid excludeId={featured.id} onOpen={setActiveId} />
+              <BlogsGrid excludeId={featured.id} onOpen={openPost} />
             </Stack>
           </Stack>
         )}
