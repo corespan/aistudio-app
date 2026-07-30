@@ -12,6 +12,10 @@ import { APP_THEME, RESOLVER } from '@/app/constants'
 
 const theme = createTheme(APP_THEME)
 
+// react-router's basename matcher requires the URL to start with the basename
+// string, so a trailing slash (e.g. `/aistudio/`) fails to match a URL of
+// exactly `/aistudio` (no trailing slash). Strip it, keeping `/` as-is.
+
 const App = () => {
   return (
     <MantineProvider theme={theme} cssVariablesResolver={RESOLVER} defaultColorScheme="dark">
@@ -20,7 +24,7 @@ const App = () => {
         <QueryClientProvider client={queryClient}>
           {/* `BASE_URL` is `/aistudio/` in production (see vite.config.ts) and
               `/` in dev, so client-side routes resolve correctly either way. */}
-          <BrowserRouter basename={import.meta.env.BASE_URL}>
+          <BrowserRouter>
             <AppLayout />
           </BrowserRouter>
         </QueryClientProvider>
