@@ -233,11 +233,11 @@ export const AppLayout = () => {
             <Box flex={1} mih={0} bg="var(--core-surface-1)" style={{ overflow: 'hidden' }}>
               <ScrollArea h="100%" type="scroll" scrollbarSize={6}>
                 <Routes>
-                  <Route path="/aistudio" element={<Benchmarks />} />
-                  <Route path="/aistudio/jupyter" element={<LaunchJupyter />} />
-                  <Route path="/aistudio/blogs" element={<BlogsPage />} />
-                  <Route path="/aistudio/blogs/:postId" element={<BlogsPage />} />
-                  <Route path="/aistudio/about" element={<AboutUs />} />
+                  <Route path="/" element={<Benchmarks />} />
+                  <Route path="/jupyter" element={<LaunchJupyter />} />
+                  <Route path="/blogs" element={<BlogsPage />} />
+                  <Route path="/blogs/:postId" element={<BlogsPage />} />
+                  <Route path="/about" element={<AboutUs />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </ScrollArea>
