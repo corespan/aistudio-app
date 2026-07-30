@@ -138,7 +138,7 @@ export const AppLayout = () => {
                 >
                   <Flex align="center" justify="center" gap={12}>
                     <Image
-                      src="/corespan.png"
+                      src={`${import.meta.env.BASE_URL}corespan.png`}
                       alt="Corespan Logo"
                       fit="contain"
                       w={28}
