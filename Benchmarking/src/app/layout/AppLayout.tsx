@@ -4,8 +4,8 @@ import {
   Box,
   Flex,
   Image,
-  Menu,
   NavLink,
+  Paper,
   Portal,
   ScrollArea,
   Space,
@@ -14,31 +14,23 @@ import {
   Tooltip,
   useMantineColorScheme,
 } from '@mantine/core'
-import {
-  IconChevronDown,
-  IconChevronLeft,
-  IconChevronRight,
-  IconChevronUp,
-  IconLogout,
-  IconSettings,
-  IconUserCircle,
-} from '@tabler/icons-react'
+import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react'
 import { useState } from 'react'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router'
 import { AppFooter } from '@/app/layout/AppFooter'
 import { CoreIcon } from '@/shared/ui'
 import { Benchmarks } from '@/features/benchmarks/Benchmarks'
 import { LaunchJupyter } from '@/features/benchmarks/components/LaunchJupyter'
-import { JupyterUrlsMenuItems } from '@/features/benchmarks/components/JupyterUrlsMenu'
+import { JupyterUrlsPanel } from '@/features/benchmarks/components/JupyterUrlsPanel'
 import { DbHealthIndicator } from '@/features/benchmarks/components/DbHealthIndicator'
 import { AboutUs } from '@/features/about/AboutUs'
 import { BlogsPage } from '@/features/blogs/BlogsPage'
-import { BLOG_POSTS } from '@/features/blogs/constants'
 import {
   HEADER_HEIGHT,
   NAV_GROUPS,
   NAVBAR_WIDTH,
   NAVBAR_COLLAPSED_WIDTH,
+  JUPYTER_PANEL_WIDTH,
   type SectionKey,
   type NavGroup,
 } from '@/app/constants'
@@ -60,25 +52,18 @@ export const AppLayout = () => {
       : location.pathname.startsWith(pathForKey(child.key)),
   )?.key ?? 'benchmarks') as SectionKey
   const [isNavbarCollapsed, setIsNavbarCollapsed] = useState(false)
-  // Controlled so the whole Launch Jupyter row can toggle it (not just the
-  // chevron) and so the chevron's own up/down state can reflect it.
-  const [jupyterMenuOpened, setJupyterMenuOpened] = useState(false)
-  // Placeholder until benchmarks wires up auth; composer derives this from the token.
-  const username = 'User'
 
   const handleNavBarClose = () => {
     setIsNavbarCollapsed(!isNavbarCollapsed)
   }
 
-  // On a single article's route, show its own headline in the top bar instead
-  // of the generic "Blogs" section label.
-  const activeBlogPostTitle = location.pathname.startsWith('/blogs/')
-    ? BLOG_POSTS.find((post) => post.id === location.pathname.split('/blogs/')[1])?.title
-    : undefined
+  // The top bar always shows the section label — "Blogs" — even on a single
+  // article's route, rather than swapping in that article's own headline.
   const pageTitle =
-    activeBlogPostTitle ??
-    NAV_GROUPS.flatMap((group) => group.children).find((child) => child.key === active)?.label ??
-    ''
+    active === 'jupyter'
+      ? 'Launch Jupyter & Instances'
+      : (NAV_GROUPS.flatMap((group) => group.children).find((child) => child.key === active)
+          ?.label ?? '')
 
   const renderMenuItems = (groups: NavGroup[]) => {
     return groups.map((group, index) => {
@@ -104,22 +89,12 @@ export const AppLayout = () => {
       items.push(
         ...group.children.map((child) => {
           const isActive = active === child.key
-          const isJupyter = child.key === 'jupyter'
-          const showChevron = isJupyter && !isNavbarCollapsed
 
           const navLink = (
             <NavLink
               id={child.key}
               label={!isNavbarCollapsed ? <Text size="sm">{child.label}</Text> : ''}
               leftSection={<CoreIcon icon={<child.icon />} size={18} />}
-              rightSection={
-                showChevron &&
-                (jupyterMenuOpened ? (
-                  <CoreIcon icon={<IconChevronUp stroke={1.8} />} size={14} />
-                ) : (
-                  <CoreIcon icon={<IconChevronDown stroke={1.8} />} size={14} />
-                ))
-              }
               childrenOffset={16}
               active={isActive}
               variant={colorScheme === 'light' ? 'filled' : 'light'}
@@ -128,55 +103,6 @@ export const AppLayout = () => {
               noWrap
             />
           )
-
-          // Launch Jupyter gets an extra dropdown off the sidebar row itself: a
-          // quick-access list of every known Jupyter Lab URL, so you don't have
-          // to open the page just to grab a link.
-          if (isJupyter) {
-            if (isNavbarCollapsed) {
-              // Collapsed navbar has no label/chevron to click, so the dropdown
-              // opens on hover instead (click-hover keeps it keyboard accessible).
-              return (
-                <Menu
-                  key={child.key}
-                  trigger="click-hover"
-                  openDelay={100}
-                  closeDelay={150}
-                  shadow="md"
-                  width={280}
-                  position="right-start"
-                  withinPortal
-                >
-                  <Menu.Target>{navLink}</Menu.Target>
-                  <Menu.Dropdown>
-                    <Menu.Label>Jupyter Lab URLs</Menu.Label>
-                    <JupyterUrlsMenuItems />
-                  </Menu.Dropdown>
-                </Menu>
-              )
-            }
-
-            // Expanded navbar: the whole row is the toggle (not just the
-            // chevron) — Menu is controlled so the chevron's direction always
-            // matches whether the dropdown is actually open.
-            return (
-              <Menu
-                key={child.key}
-                opened={jupyterMenuOpened}
-                onChange={setJupyterMenuOpened}
-                shadow="md"
-                width={300}
-                position="right-start"
-                withinPortal
-              >
-                <Menu.Target>{navLink}</Menu.Target>
-                <Menu.Dropdown>
-                  <Menu.Label>Jupyter Lab URLs</Menu.Label>
-                  <JupyterUrlsMenuItems />
-                </Menu.Dropdown>
-              </Menu>
-            )
-          }
 
           return (
             <Tooltip key={child.key} label={child.label} disabled={!isNavbarCollapsed}>
@@ -262,33 +188,55 @@ export const AppLayout = () => {
           h="calc(100vh - var(--app-shell-footer-height, 0px))"
           style={{ transition: 'padding 300ms ease', display: 'flex', flexDirection: 'column' }}
         >
+          {/* Single shared header for the whole main area — the Jupyter URLs
+              card below sits under this same heading on every page, so it
+              never needs (or risks drifting out of sync with) its own title. */}
           <Flex
             h={HEADER_HEIGHT}
-            px={16}
-            gap={16}
+            pl="lg"
+            pr={16}
+            gap={0}
             align="center"
             justify="space-between"
             style={{ borderBottom: '1px solid var(--app-shell-border-color)' }}
           >
-            <Text fw={600} size="md" tt="uppercase">
+            <Text fw={600} size="md" tt="uppercase" lineClamp={1}>
               {pageTitle}
             </Text>
 
             <DbHealthIndicator />
           </Flex>
 
-          <Box flex={1} mih={0} bg="var(--core-surface-1)" style={{ overflow: 'hidden' }}>
-            <ScrollArea h="100%" type="scroll" scrollbarSize={6}>
-              <Routes>
-                <Route path="/" element={<Benchmarks />} />
-                <Route path="/jupyter" element={<LaunchJupyter />} />
-                <Route path="/blogs" element={<BlogsPage />} />
-                <Route path="/blogs/:postId" element={<BlogsPage />} />
-                <Route path="/about" element={<AboutUs />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </ScrollArea>
-          </Box>
+          <Flex flex={1} mih={0} style={{ overflow: 'hidden' }}>
+            {/* Jupyter URLs card — only shown on the Launch Jupyter page,
+                below the shared header above. */}
+            {active === 'jupyter' && (
+              <Paper
+                withBorder
+                radius={0}
+                shadow="none"
+                w={JUPYTER_PANEL_WIDTH}
+                h="100%"
+                visibleFrom="sm"
+                style={{ flex: `0 0 ${JUPYTER_PANEL_WIDTH}px`, overflow: 'hidden' }}
+              >
+                <JupyterUrlsPanel />
+              </Paper>
+            )}
+
+            <Box flex={1} mih={0} bg="var(--core-surface-1)" style={{ overflow: 'hidden' }}>
+              <ScrollArea h="100%" type="scroll" scrollbarSize={6}>
+                <Routes>
+                  <Route path="/" element={<Benchmarks />} />
+                  <Route path="/jupyter" element={<LaunchJupyter />} />
+                  <Route path="/blogs" element={<BlogsPage />} />
+                  <Route path="/blogs/:postId" element={<BlogsPage />} />
+                  <Route path="/about" element={<AboutUs />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </ScrollArea>
+            </Box>
+          </Flex>
         </AppShell.Main>
 
         <AppShell.Footer>

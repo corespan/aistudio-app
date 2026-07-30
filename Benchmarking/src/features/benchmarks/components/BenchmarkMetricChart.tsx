@@ -83,6 +83,7 @@ const runTooltipHtml = (run: BenchmarkRun, accentColor: string) => {
 
       ${sectionLabel('Configuration')}
       <table style="width:100%;border-collapse:collapse">
+        ${row('Chasis', run.serverName || '—')}
         ${row('GPU', normalizeGpuType(run.gpuType) ?? '—')}
         ${row('GPU Count', run.gpuCount != null ? String(run.gpuCount) : '—')}
         ${row('Precision', run.precision || '—')}

@@ -1,0 +1,20 @@
+.row {
+  position: relative;
+  transition:
+    background-color 100ms ease,
+    border-color 100ms ease;
+}
+
+.row:hover {
+  background-color: var(--mantine-color-default-hover);
+  border-color: var(--mantine-color-default-border);
+}
+
+.dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  margin-top: 6px;
+  background-color: var(--mantine-color-gray-5);
+}

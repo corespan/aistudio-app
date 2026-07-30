@@ -17,7 +17,7 @@ export const Benchmarks = () => {
   return (
     <>
       <PageShell>
-        <Container fluid pt="lg" px="lg" pb="xl" h="100%">
+        <Container fluid pt="lg" pl="lg" pr="lg" pb="xl" h="100%">
           <Stack gap="md" h="100%" style={{ minHeight: 0 }}>
             <Group justify="flex-end">
               <Button
