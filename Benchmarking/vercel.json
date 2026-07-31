@@ -1,1 +1,16 @@
-{"redirects":[{"source":"/","destination":"https://www.corespan.ai/products/corespan-composer","permanent":true}],"rewrites":[{"source":"/aistudio","destination":"/"},{"source":"/aistudio/:path*","destination":"/:path*"}]}
+{
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "https://www.corespan.ai/products/corespan-composer",
+      "permanent": true
+    }
+  ],
+  "rewrites": [
+    { "source": "/aistudio", "destination": "/index.html" },
+    { "source": "/aistudio/", "destination": "/index.html" },
+    { "source": "/aistudio/assets/:path*", "destination": "/assets/:path*" },
+    { "source": "/aistudio/:file([^/]+\\.[^/]+)", "destination": "/:file" },
+    { "source": "/aistudio/:path*", "destination": "/index.html" }
+  ]
+}
