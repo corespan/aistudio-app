@@ -1,0 +1,23 @@
+# Repository-root ignores.
+#
+# Benchmarking/ has its own .gitignore for build output and node_modules; this
+# one covers things that appear at the root, where there was previously no
+# .gitignore at all.
+
+# IDE
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env — never commit. Benchmarking/.env.example is the template.
+.env
+.env.*
+!.env.example
+
+# Deploy
+.vercel

@@ -1,0 +1,16 @@
+# Generated compliance artifacts are written with LF by Node. Without this, a
+# contributor with core.autocrlf=true checks them out as CRLF, and
+# `pnpm licences:check` reports them stale with no useful diagnostic — the
+# content is identical and only the line endings differ.
+* text=auto eol=lf
+
+*.md   text eol=lf
+*.txt  text eol=lf
+*.mjs  text eol=lf
+*.json text eol=lf
+*.yml  text eol=lf
+
+# Binary — never normalise.
+*.png  binary
+*.woff binary
+*.woff2 binary
