@@ -1,6 +1,6 @@
-import { Box, Button, Container, Group, Text, ThemeIcon } from '@mantine/core'
+import { Anchor, Box, Button, Container, Group, Text, ThemeIcon } from '@mantine/core'
 import { IconBrandGithub, IconChartBar, IconStar } from '@tabler/icons-react'
-import { REPO_URL } from '@/app/constants'
+import { LICENCES_URL, REPO_URL } from '@/app/constants'
 import { CoreIcon } from '@/shared/ui'
 
 /**
@@ -22,6 +22,42 @@ export const AppFooter = () => (
           <Text size="sm" c="dimmed">
             © {new Date().getFullYear()} AI Studio
           </Text>
+          {/*
+            Attribution for the bundled open-source packages. This link is the
+            mechanism by which the notices actually reach the person receiving
+            the bundle — MIT, BSD, ISC and OFL all require the copyright notice
+            to accompany a distributed copy, and esbuild strips comments during
+            minification, so nothing survives inside the JS itself.
+
+            Deliberately NOT `visibleFrom="sm"`, unlike the GitHub callout to
+            the right. A mobile visitor receives exactly the same bundle as a
+            desktop one, so hiding the link below the breakpoint would leave the
+            notices unreachable for that visitor while every automated check
+            still passed — the file would be in dist/, the string would be in
+            the bundle, and nobody could get to it. The label shortens on narrow
+            screens rather than disappearing.
+
+            Regenerate the target with `pnpm licences`. Do not remove.
+          */}
+          <Text size="sm" c="dimmed" aria-hidden>
+            ·
+          </Text>
+          <Anchor
+            href={LICENCES_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            size="sm"
+            c="dimmed"
+            underline="hover"
+            style={{ whiteSpace: 'nowrap' }}
+          >
+            <Text component="span" size="sm" visibleFrom="sm" inherit>
+              Open-source licences
+            </Text>
+            <Text component="span" size="sm" hiddenFrom="sm" inherit>
+              Licences
+            </Text>
+          </Anchor>
         </Group>
 
         <Group gap="sm" wrap="nowrap">
