@@ -138,3 +138,43 @@ Benchmarking/
 ```
 
 See [`Benchmarking/CLAUDE.md`](Benchmarking/CLAUDE.md) for architecture details.
+
+---
+
+## Licensing
+
+CoreSpan AI's source in this repository is licensed **Apache-2.0** — see
+[`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
+
+Apache-2.0 Section 6 grants no trademark rights. "CoreSpan" and the CoreSpan
+logo are trademarks of CoreSpan AI.
+
+### Third-party attribution
+
+This is a browser application: every visitor receives a bundle containing ~54
+open-source packages. Serving that bundle is distribution, and MIT, BSD, ISC and
+OFL-1.1 all require the copyright notice to travel with a distributed copy.
+
+| What | Where |
+| --- | --- |
+| Inventory of bundled packages | [`Benchmarking/THIRD-PARTY-NOTICES.md`](Benchmarking/THIRD-PARTY-NOTICES.md) |
+| Full licence texts, served with the app | `/aistudio/third-party-licences.txt`, linked from the app footer |
+| Response to the licence review | [`docs/LICENCE-REVIEW-RESPONSE.md`](docs/LICENCE-REVIEW-RESPONSE.md) |
+
+The production tree is entirely permissive — no GPL, LGPL or MPL. The
+obligations are attribution only.
+
+### Verifying it yourself
+
+```bash
+cd Benchmarking
+pnpm licences          # regenerate the inventory and the served licence texts
+pnpm licences:check    # fail if either is stale
+pnpm compliance        # everything CI checks, minus the build-output assertions
+```
+
+CI runs the same checks plus two that can only be made against a real build —
+that the licence file lands in `dist/` and that the bundle links it. See
+[`.github/workflows/compliance.yml`](.github/workflows/compliance.yml).
+
+Regenerate the inventory whenever dependencies change; CI fails if it drifts.

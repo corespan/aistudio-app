@@ -1,0 +1,158 @@
+name: Licence compliance
+
+# Makes the licence position self-enforcing. Every check here exists because
+# something was found missing in the review; the point is that it cannot
+# regress quietly.
+#
+# The central concern for this repo is different from aistudio-server. This is
+# a publicly deployed browser app, so serving the bundle IS distribution and
+# the attribution conditions of ~54 permissive licences apply on every page
+# load. esbuild strips comments during minification, so attribution has to be
+# emitted deliberately — and CI has to confirm it still is.
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  schedule:
+    # Weekly. Upstream packages change licences occasionally and silently.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: Benchmarking
+
+jobs:
+  compliance:
+    name: Licence files, attribution, inventory
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          # The app lives in Benchmarking/, and there is no root package.json.
+          # `defaults.run.working-directory` only affects `run:` steps — `uses:`
+          # steps run from the workspace root, so without this the action looks
+          # for <workspace>/package.json, finds nothing, and fails before
+          # setup-node runs.
+          #
+          # The version itself comes from the `packageManager` field in that
+          # file. Pinning it matters: this workflow's inventory check compares
+          # committed artifacts against `pnpm licenses list --prod --json`
+          # output, whose shape has changed across pnpm majors. An unpinned
+          # bump would turn the artifacts "stale" and report it as a missing
+          # `pnpm licences` run.
+          package_json_file: Benchmarking/package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: Benchmarking/pnpm-lock.yaml
+
+      - name: Install (frozen lockfile)
+        # --frozen-lockfile is what makes the ^ ranges in package.json safe.
+        # An unfrozen install would silently resolve a different tree, and the
+        # committed inventory would stop describing what actually ships.
+        run: pnpm install --frozen-lockfile
+
+      - name: Run compliance checks
+        # Same script as `pnpm compliance` locally, so the feedback loop does
+        # not require a push. Covers: LICENSE completeness and filled-in
+        # copyright, required files present, package.json license field,
+        # no CDN origins, the footer attribution link, and inventory freshness.
+        run: pnpm compliance
+
+  bundle-attribution:
+    name: Built bundle carries attribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          # The app lives in Benchmarking/, and there is no root package.json.
+          # `defaults.run.working-directory` only affects `run:` steps — `uses:`
+          # steps run from the workspace root, so without this the action looks
+          # for <workspace>/package.json, finds nothing, and fails before
+          # setup-node runs.
+          #
+          # The version itself comes from the `packageManager` field in that
+          # file. Pinning it matters: this workflow's inventory check compares
+          # committed artifacts against `pnpm licenses list --prod --json`
+          # output, whose shape has changed across pnpm majors. An unpinned
+          # bump would turn the artifacts "stale" and report it as a missing
+          # `pnpm licences` run.
+          package_json_file: Benchmarking/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: Benchmarking/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build
+        env:
+          # vite.config.ts throws without this. Value is irrelevant to the
+          # licence check — nothing is called at build time.
+          VITE_API_URL: https://example.invalid
+        run: pnpm build
+
+      - name: Licence text is present in the deployed output
+        # This is the check that actually matters. Everything else verifies
+        # files exist in the repo; this verifies the notices reach the person
+        # receiving the bundle. Before this was fixed, `grep -c Copyright`
+        # across dist/assets/*.js returned 0.
+        run: |
+          file=dist/third-party-licences.txt
+          if [ ! -f "$file" ]; then
+            echo "::error::$file was not emitted into the build output."
+            echo "Vite copies public/ into dist/. Run 'pnpm licences' and commit."
+            exit 1
+          fi
+
+          copyrights=$(grep -c "Copyright" "$file" || true)
+          if [ "$copyrights" -lt 40 ]; then
+            echo "::error::only $copyrights copyright notices in $file — expected 40+."
+            exit 1
+          fi
+          echo "$copyrights copyright notices present."
+
+          # Apache-2.0 section 4(d): echarts ships a NOTICE whose attributions
+          # must be reproduced in any distribution of a derivative work.
+          grep -q "The Apache Software Foundation" "$file" || {
+            echo "::error::the Apache ECharts NOTICE attribution is missing (Apache-2.0 s4(d))."
+            exit 1
+          }
+          echo "Apache NOTICE attribution present."
+
+          # OFL-1.1 section 2: the licence must accompany the bundled fonts.
+          grep -qi "SIL OPEN FONT LICENSE" "$file" || {
+            echo "::error::the OFL-1.1 text is missing, but Inter is bundled (OFL s2)."
+            exit 1
+          }
+          echo "OFL-1.1 text present."
+
+      - name: The app links to it, with the production base path
+        run: |
+          # A licence file nobody can reach is not attribution. The footer link
+          # is the delivery mechanism, and the base path has to survive the
+          # build — the app is served under /aistudio/, not /.
+          if ! grep -rq "/aistudio/third-party-licences.txt" dist/assets/*.js; then
+            echo "::error::the bundle does not reference /aistudio/third-party-licences.txt."
+            echo "Check LICENCES_URL in src/app/constants.ts and the footer link."
+            exit 1
+          fi
+          echo "Bundle links the licence file at the correct base path."
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: third-party-licences
+          path: Benchmarking/dist/third-party-licences.txt
+          if-no-files-found: warn
