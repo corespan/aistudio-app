@@ -36,7 +36,7 @@ export const toNamedOptions = (raw: unknown): ComboboxData => toOptions(raw)
 
 /**
  * Normalize /nodes into Machine IP options. Value is the node's IP; label adds
- * the hostname/name when present (e.g. "10.6.82.45 (bench-01)").
+ * the hostname/name when present (e.g. "192.0.2.45 (bench-01)").
  */
 export const toNodeOptions = (raw: unknown): ComboboxData =>
   unwrap(raw)

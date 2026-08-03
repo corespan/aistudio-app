@@ -8,7 +8,7 @@ The application lives in the [`Benchmarking/`](Benchmarking) directory.
 
 **GitHub:** [github.com/corespan/aistudio-app](https://github.com/corespan/aistudio-app),
   https://github.com/corespan/aistudio-cli,
-  https://aistudio-app-iota.vercel.app/aistudio
+  
 
 ---
 
@@ -148,6 +148,13 @@ CoreSpan AI's source in this repository is licensed **Apache-2.0** — see
 
 Apache-2.0 Section 6 grants no trademark rights. "CoreSpan" and the CoreSpan
 logo are trademarks of CoreSpan AI.
+
+One consequence of that is worth stating rather than leaving to inference: the
+copyright grant in Section 2 covers every file here, so the two image files that
+carry the marks — `Benchmarking/public/corespan.png` and
+`Benchmarking/public/favicon.svg` — are excluded from it. Swap them out if you
+redistribute a modified version. Every other asset is covered normally. See
+[`NOTICE`](NOTICE).
 
 ### Third-party attribution
 

@@ -50,7 +50,7 @@
  *   node scripts/generate-third-party-notices.mjs --check   # CI: fail if stale
  */
 
-import { execFileSync } from 'node:child_process'
+import { execFileSync, execSync } from 'node:child_process'
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -76,6 +76,27 @@ const CHECK = process.argv.includes('--check')
  * more than byte-preserving somebody's line endings.
  */
 const normalise = (text) => text.replace(/\r\n?/g, '\n').replace(/[ \t]+$/gm, '')
+
+/**
+ * Run pnpm and capture its output, on Windows as well as POSIX.
+ *
+ * `pnpm` on PATH is a shim: an extensionless script on POSIX, `pnpm.cmd` on
+ * Windows. Since Node 20.12 (the CVE-2024-27980 fix) spawning a `.cmd` without
+ * a shell is refused, so `execFileSync('pnpm', ...)` failed here with ENOENT —
+ * which the catch below reported as "run `pnpm install` first", sending anyone
+ * who hit it after an install that had worked fine.
+ *
+ * Windows therefore needs a shell. Passing an args array *and* `shell: true`
+ * concatenates them unescaped and warns (DEP0190), so the command is built as
+ * one string instead. Every argument here is a literal — nothing is
+ * interpolated from the environment or the lockfile — so there is nothing for
+ * cmd.exe to misparse. POSIX keeps the no-shell path, which is what CI runs.
+ */
+function runPnpm(args, options) {
+  return process.platform === 'win32'
+    ? execSync(`pnpm ${args.join(' ')}`, options)
+    : execFileSync('pnpm', args, options)
+}
 
 /** Filenames that hold a licence text, in order of preference. */
 const LICENCE_FILENAMES = [
@@ -107,7 +128,7 @@ function readProductionPackages() {
   // licence text can be read rather than guessed from an SPDX string.
   let raw
   try {
-    raw = execFileSync('pnpm', ['licenses', 'list', '--prod', '--json'], {
+    raw = runPnpm(['licenses', 'list', '--prod', '--json'], {
       cwd: ROOT,
       encoding: 'utf8',
       maxBuffer: 64 * 1024 * 1024,
@@ -141,26 +162,64 @@ function readProductionPackages() {
   return packages
 }
 
+/**
+ * Read the licence text a package ships on disk.
+ *
+ * Every filename decision below goes through one `readdirSync` listing rather
+ * than `existsSync` probes. That is deliberate, and it is the fix for a bug
+ * that only appeared once this script was first run on Windows:
+ *
+ *   NTFS is case-insensitive, so `existsSync('.../LICENSE-MIT')` returns true
+ *   for a file actually named `license-mit`. `type-fest` is dual `MIT OR
+ *   CC0-1.0` and ships both `license-mit` and `license-cc0`. On Linux the
+ *   preference list missed both and the fallback picked CC0; on Windows
+ *   `LICENSE-MIT` matched case-insensitively and won. Same commit, same
+ *   lockfile, 120 lines of difference — and `--check` called the committed
+ *   artifact stale on a clean checkout.
+ *
+ * Matching against the real listing makes the preference list mean what it
+ * says on both platforms. `readdirSync` order is filesystem-defined, so the
+ * fallback sorts before choosing; without that the output would still depend
+ * on the machine that produced it.
+ */
 function readLicenceText(pkgPath) {
   if (!existsSync(pkgPath)) return null
 
-  for (const filename of LICENCE_FILENAMES) {
-    const candidate = join(pkgPath, filename)
-    if (existsSync(candidate)) {
-      try {
-        return normalise(readFileSync(candidate, 'utf8')).trim()
-      } catch {
-        /* fall through to the next candidate */
-      }
+  let entries
+  try {
+    entries = readdirSync(pkgPath)
+  } catch {
+    return null // unreadable directory — reported as missing below
+  }
+
+  const read = (filename) => {
+    try {
+      return normalise(readFileSync(join(pkgPath, filename), 'utf8')).trim()
+    } catch {
+      return null
     }
   }
 
+  for (const filename of LICENCE_FILENAMES) {
+    if (!entries.includes(filename)) continue
+    const text = read(filename)
+    if (text) return text
+  }
+
   // Some packages name the file unpredictably (LICENSE-APACHE, COPYING, ...).
-  try {
-    const match = readdirSync(pkgPath).find((f) => /^(licen[cs]e|copying)/i.test(f))
-    if (match) return normalise(readFileSync(join(pkgPath, match), 'utf8')).trim()
-  } catch {
-    /* unreadable directory — reported as missing below */
+  // A package that ships more than one is telling us something — usually that
+  // it is dual-licensed — so reproduce all of them, labelled, rather than
+  // picking one and discarding the choice the manifest advertises.
+  const matches = entries.filter((f) => /^(licen[cs]e|copying)/i.test(f)).sort()
+
+  if (matches.length === 1) return read(matches[0])
+
+  if (matches.length > 1) {
+    const texts = matches
+      .map((f) => ({ f, text: read(f) }))
+      .filter(({ text }) => text)
+      .map(({ f, text }) => `── ${f} ──\n\n${text}`)
+    if (texts.length) return texts.join('\n\n')
   }
 
   return null

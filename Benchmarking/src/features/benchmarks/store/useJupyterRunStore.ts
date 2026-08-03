@@ -6,9 +6,10 @@ import type { JupyterRun, JupyterRunStore } from '../types'
 
 // The notebook URL isn't in the launch response — it arrives later in the log
 // stream on the definitive ready line, e.g.
-// "✓ Jupyter Lab running at: http://10.6.12.22:8899/lab". Match only that line
-// (not any stray "running at" log) so the URL — and the Open button — surface
-// exactly when Jupyter is actually ready.
+// "✓ Jupyter Lab running at: http://192.0.2.22:8899/lab" (a RFC 5737
+// documentation address, not a real host). Match only that line — not any
+// stray "running at" log — so the URL, and the Open button, surface exactly
+// when Jupyter is actually ready.
 const extractUrlFromLog = (line: string): string | null => {
   const match = line.match(/jupyter\s*lab\s+running at:?\s*(https?:\/\/\S+)/i)
   return match ? match[1].replace(/[.,)]+$/, '') : null
