@@ -3,6 +3,15 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "license": "Apache-2.0",
+  "author": "CoreSpan AI",
+  "packageManager": "pnpm@11.18.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/corespan/aistudio-app.git",
+    "directory": "Benchmarking"
+  },
+  "homepage": "https://www.corespan.ai/aistudio",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
@@ -12,7 +21,11 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "licences": "node scripts/generate-third-party-notices.mjs",
+    "licences:check": "node scripts/generate-third-party-notices.mjs --check",
+    "compliance": "node scripts/check-compliance.mjs",
+    "compliance:full": "node scripts/check-compliance.mjs --build"
   },
   "dependencies": {
     "@fontsource/inter": "^5.3.0",

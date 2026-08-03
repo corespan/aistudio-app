@@ -276,7 +276,7 @@ export const StartBenchmarkModal = ({ opened, onClose }: StartBenchmarkModalProp
                   <Paper withBorder radius="md" p="lg" shadow="xs">
                     <Autocomplete
                       label="Node IP"
-                      placeholder="Type or paste a machine IP (e.g. 10.6.12.22)"
+                      placeholder="Type or paste a machine IP (e.g. 10.0.0.12)"
                       description={
                         nodes.data && nodes.data.length > 0
                           ? 'Previously used machines appear as suggestions'

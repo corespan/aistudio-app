@@ -125,6 +125,21 @@ const APP_THEME = {
 // AppFooter
 const REPO_URL = 'https://github.com/corespan/aistudio-app'
 
+/**
+ * Attribution for the open-source packages bundled into this app.
+ *
+ * Generated into `public/third-party-licences.txt` by
+ * `pnpm licences`, which Vite copies to the deploy root. Resolved against
+ * `import.meta.env.BASE_URL` so it works both in dev (served at `/`) and in
+ * production (served under `/aistudio/`).
+ *
+ * This is not decoration. MIT, BSD, ISC and OFL-1.1 all require the copyright
+ * notice to accompany a distributed copy, and every visitor's browser receives
+ * a copy. esbuild strips comments during minification, so this link is the only
+ * route by which the notices reach the recipient.
+ */
+const LICENCES_URL = `${import.meta.env.BASE_URL}third-party-licences.txt`
+
 // AppLayout
 type SectionKey = 'benchmarks' | 'jupyter' | 'blogs' | 'about'
 
@@ -164,6 +179,7 @@ export {
   HEADER_HEIGHT,
   HEADER_OFFSET,
   REPO_URL,
+  LICENCES_URL,
   NAV_GROUPS,
   NAVBAR_WIDTH,
   NAVBAR_COLLAPSED_WIDTH,
