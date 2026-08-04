@@ -9,7 +9,7 @@
  * Usage:  pnpm compliance
  */
 
-import { execFileSync } from 'node:child_process'
+import { execFileSync, execSync } from 'node:child_process'
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -242,11 +242,16 @@ section('Build output')
     }
   } else {
     try {
-      execFileSync('pnpm', ['build'], {
+      const buildOptions = {
         cwd: APP,
         stdio: 'inherit',
         env: { ...process.env, VITE_API_URL: process.env.VITE_API_URL || 'https://example.invalid' },
-      })
+      }
+      // `pnpm` is a .cmd on Windows and Node refuses to spawn one without a
+      // shell — see the longer note on runPnpm in
+      // generate-third-party-notices.mjs.
+      if (process.platform === 'win32') execSync('pnpm build', buildOptions)
+      else execFileSync('pnpm', ['build'], buildOptions)
     } catch {
       fail('build failed')
     }

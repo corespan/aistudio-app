@@ -23,16 +23,19 @@ client, UI primitives, chart wrappers — lives locally under `src/shared/`.
 
 ---
 
-## Shared Packages
+## Shared Code
 
-This app consumes the workspace packages via `workspace:*` and path aliases
-(wired in `vite.config.ts` + `tsconfig*.json`):
+There are no workspace packages and no private registry — every dependency in
+`package.json` is public on npm, so a clean `pnpm install` is all a fresh
+checkout needs.
 
-- `@corespan/ui` — shared components (peer deps only — this app provides Mantine/React/etc.)
-- `@corespan/api` — zero-dep HTTP client (`createApiClient`)
-- `@corespan/utils` — zero-dep helpers
+Shared code lives under `src/shared/` and is imported through the single `@`
+alias (`@` → `src`, wired in `vite.config.ts` + `tsconfig*.json`):
 
-Never import across workspace boundaries with relative paths — always use the `@corespan/` alias.
+- `@/shared/api` — HTTP client (`baseClient`), `API_ORIGIN`, TanStack `queryClient`
+- `@/shared/ui` — local primitives: `CoreChart`, `CoreTable`, `CoreForm`, `CoreIcon`
+
+Prefer the `@` alias over deep relative paths (`../../../shared/...`).
 
 ---
 
@@ -41,14 +44,24 @@ Never import across workspace boundaries with relative paths — always use the 
 ```
 src/
 ├── app/
-│   └── App.tsx              # Mantine + QueryClient providers
+│   ├── App.tsx              # Mantine + QueryClient providers
+│   ├── constants.ts
+│   └── layout/              # AppLayout, AppFooter, PageShell
 ├── features/
-│   └── benchmarks/
-│       └── Benchmarks.tsx   # Starter page
+│   ├── about/               # AboutUs page + components
+│   └── benchmarks/          # The main feature
+│       ├── Benchmarks.tsx
+│       ├── components/      # Tables, charts, modals, log streams
+│       ├── data/            # Query keys, services
+│       ├── lib/             # Pure helpers (maskIp, toBenchmarkRows, ...)
+│       └── store/           # Zustand stores (useJupyterRunStore, ...)
 ├── shared/
-│   └── api/
-│       ├── baseClient.ts    # Single createApiClient instance — never create a second
-│       └── queryClient.ts   # TanStack QueryClient config
+│   ├── api/
+│   │   ├── baseClient.ts    # Single createApiClient instance — never create a second
+│   │   ├── config.ts        # API_ORIGIN, resolved from VITE_API_URL
+│   │   ├── core/            # Client, middleware, error types
+│   │   └── queryClient.ts   # TanStack QueryClient config
+│   └── ui/                  # CoreChart, CoreTable, CoreForm, CoreIcon
 ├── index.css
 └── main.tsx                 # React 19 StrictMode entry point
 ```
@@ -64,6 +77,11 @@ import it — never instantiate a second client.
 
 ## Development Proxy
 
-The Vite config has no backend proxy yet. When the app needs to call the backend,
-add a proxy block mirroring `apps/composer/vite.config.ts` and document the required
-`.env` vars here (see `.env.example`).
+`vite.config.ts` proxies two paths to `VITE_API_URL`:
+
+- `/api` — the versioned API namespace
+- `/health` — the backend's health probe, which sits at the root rather than
+  under `/api/v1` and so needs its own entry
+
+`VITE_API_URL` is **required** — the dev server throws on startup without it.
+Copy `.env.example` to `.env` and point it at your backend.

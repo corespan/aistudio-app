@@ -43,5 +43,22 @@ CoreSpan logo are trademarks of CoreSpan AI. All other product names, logos and
 brands referenced in this repository are the property of their respective owners
 and are used for identification purposes only.
 
+Section 6 withholds trademark rights, but the copyright grant in Section 2 still
+reaches every file in the repository — including the image files that carry the
+marks. Those two are separated explicitly here:
+
+    Benchmarking/public/corespan.png
+    Benchmarking/public/favicon.svg
+
+Both are CoreSpan AI's own work and are excluded from the Apache-2.0 grant. They
+are included so the application renders as intended; no licence to reproduce,
+modify or redistribute them apart from the application is granted. Replace them
+when redistributing a modified version — which is the outcome Section 6 already
+implies, stated here so it does not depend on inference.
+
+Every other asset under Benchmarking/public/ — the diagrams and illustrations —
+is CoreSpan AI's own work and is covered by the Apache-2.0 grant along with the
+source.
+
 "Apache", "Apache ECharts" and the Apache feather logo are trademarks of The
 Apache Software Foundation.
