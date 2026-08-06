@@ -90,7 +90,6 @@ const RunTooltip = ({
         ['Precision', run.precision || '—', ''],
         ['Chasis', run.serverName || '—', ''],
         ['Run ID', run.runId || '—', ''],
-        // ['Node', run.machineIp || '—', ''],
       ] as const
     ).map(([label, value, unit]) => (
       <div

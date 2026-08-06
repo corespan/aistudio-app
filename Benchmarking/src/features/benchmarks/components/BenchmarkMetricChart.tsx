@@ -113,7 +113,6 @@ const runTooltipHtml = (run: BenchmarkRun, accentColor: string) => {
       ${sectionLabel('Details')}
       <table style="width:100%;border-collapse:collapse">
         ${row('Run ID', run.runId || '—')}
-        ${/* row('Node', run.machineIp || '—') */ ''}
         <tr>
           <td style="padding:1px 10px 1px 0;color:var(--mantine-color-dimmed);white-space:nowrap">Status</td>
           <td style="padding:1px 0;font-weight:600;text-align:right;color:${statusColor};white-space:nowrap">

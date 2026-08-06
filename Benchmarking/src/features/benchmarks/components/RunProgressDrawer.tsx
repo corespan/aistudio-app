@@ -29,11 +29,6 @@ const RunSwitcherItem = memo(({ run, active, onSelect }: RunSwitcherItemProps) =
           <Text size="sm" fw={600} truncate title={run.model ?? 'Benchmark run'}>
             {run.model ?? 'Benchmark run'}
           </Text>
-          {/* {run.nodeIp && (
-            <Text size="xs" c="dimmed" truncate title={run.nodeIp}>
-              Node {run.nodeIp}
-            </Text>
-          )} */}
           <Text size="xs" c="dimmed" ff="monospace" truncate title={run.taskId}>
             {run.taskId}
           </Text>
