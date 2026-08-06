@@ -1,5 +1,5 @@
 import { Anchor, Box, Button, Container, Group, Text, ThemeIcon } from '@mantine/core'
-import { IconBrandGithub, IconChartBar, IconStar } from '@tabler/icons-react'
+import { IconBrandGithub, IconChartBar, IconExternalLink, IconStar } from '@tabler/icons-react'
 import { LICENCES_URL, REPO_URL } from '@/app/constants'
 import { CoreIcon } from '@/shared/ui'
 
@@ -19,8 +19,14 @@ export const AppFooter = () => (
           <ThemeIcon size={28} radius="md" variant="light" color="indigo">
             <CoreIcon icon={<IconChartBar stroke={1.9} />} size={16} />
           </ThemeIcon>
-          <Text size="sm" c="dimmed">
-            © {new Date().getFullYear()} AI Studio
+          {/*
+            The copyright line names the legal entity, not the product — a
+            notice reading "© 2026 AI Studio" asserts nothing, because no such
+            entity holds the copyright. Year stays computed so it cannot go
+            stale; it matches the fixed 2026 in LICENSE and NOTICE today.
+          */}
+          <Text size="sm" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
+            © {new Date().getFullYear()} Corespan Systems, Inc
           </Text>
           {/*
             Attribution for the bundled open-source packages. This link is the
@@ -46,10 +52,22 @@ export const AppFooter = () => (
             href={LICENCES_URL}
             target="_blank"
             rel="noopener noreferrer"
+            // Announced instead of the inner spans, which would otherwise read
+            // as bare "Licences" with no hint that focus leaves the app.
+            aria-label="Open-source licences (opens in a new tab)"
             size="sm"
             c="dimmed"
-            underline="hover"
-            style={{ whiteSpace: 'nowrap' }}
+            // `always`, not `hover`: dimmed text beside more dimmed text is
+            // indistinguishable from the copyright line next to it, so the one
+            // route to the notices reads as decoration until you happen to
+            // point at it.
+            underline="always"
+            style={{
+              whiteSpace: 'nowrap',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+            }}
           >
             <Text component="span" size="sm" visibleFrom="sm" inherit>
               Open-source licences
@@ -57,6 +75,7 @@ export const AppFooter = () => (
             <Text component="span" size="sm" hiddenFrom="sm" inherit>
               Licences
             </Text>
+            <CoreIcon icon={<IconExternalLink aria-hidden />} size={13} />
           </Anchor>
         </Group>
 

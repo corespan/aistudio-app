@@ -30,6 +30,94 @@ function fail(message) {
   failed = true
 }
 
+/**
+ * Locate the JSX element whose opening tag matches `hrefRe`, and return that
+ * tag's props and its children.
+ *
+ * This replaces a pair of assertions that disagreed with each other. The first
+ * accepted `href={ LICENCES_URL }` with whitespace, via a regex; the second
+ * located the same href with `indexOf('href={LICENCES_URL}')` — a literal — and
+ * then inspected `slice(index - 400, index + 200)`. Insert one space and
+ * `indexOf` returned -1, `slice(-401, 199)` produced an empty string, the
+ * breakpoint test found nothing to match, and the check *passed*. A lock that
+ * springs open when it jams.
+ *
+ * The window was the second problem. AppFooter's doc comment mentions
+ * `visibleFrom="sm"` while explaining why the link does not use it, and the real
+ * `visibleFrom` on the inner label sat 263 characters after the href against a
+ * 200-character window — 63 characters of margin on one side, 287 on the other.
+ * Both are properties of comment length, not of correctness, so editing a
+ * comment could flip the verdict either way. Matching the element means the
+ * assertions apply to the thing being asserted about.
+ *
+ * Scanned character by character rather than with `<Anchor[^>]*>` because a JSX
+ * opening tag can legitimately contain `>`: inside a prop string, inside
+ * `style={{…}}`, inside a comment between attributes. A regex stops at the first
+ * one and hands back a truncated tag, which the caller would then read as "no
+ * breakpoint props here" — fail-open again, one layer down. Quotes, comments and
+ * brace depth are tracked for exactly that reason, and comments are dropped from
+ * the returned props so a comment can never satisfy or defeat a prop test.
+ *
+ * Deliberately tag-agnostic. The obligation is that the link is reachable, not
+ * that it is spelled `<Anchor>`; moving it to `<Button component="a">` is a
+ * legitimate refactor and must not read as a violation.
+ */
+function findElementWithHref(source, hrefRe) {
+  const openings = /<([A-Za-z][\w.]*)/g
+  let match
+
+  while ((match = openings.exec(source))) {
+    const tag = match[1]
+    const props = []
+    let depth = 0
+    let quote = null
+    let i = match.index + match[0].length
+
+    for (; i < source.length; i++) {
+      const ch = source[i]
+
+      if (quote) {
+        props.push(ch)
+        if (ch === '\\' && i + 1 < source.length) props.push(source[++i])
+        else if (ch === quote) quote = null
+        continue
+      }
+      if (ch === '"' || ch === "'" || ch === '`') {
+        quote = ch
+        props.push(ch)
+        continue
+      }
+      if (ch === '/' && source[i + 1] === '/') {
+        const newline = source.indexOf('\n', i)
+        i = newline === -1 ? source.length : newline
+        continue
+      }
+      if (ch === '/' && source[i + 1] === '*') {
+        const end = source.indexOf('*/', i)
+        i = end === -1 ? source.length : end + 1
+        continue
+      }
+      if (ch === '{') depth++
+      else if (ch === '}') depth--
+      else if (ch === '>' && depth === 0) break
+
+      props.push(ch)
+    }
+
+    const text = props.join('')
+    if (!hrefRe.test(text)) continue
+
+    // Self-closing: no children to inspect, which is different from "children
+    // we failed to find" and must not be reported as the same thing.
+    if (text.trimEnd().endsWith('/')) return { tag, props: text, children: '' }
+
+    const close = source.indexOf(`</${tag}>`, i)
+    return { tag, props: text, children: close === -1 ? null : source.slice(i + 1, close) }
+  }
+
+  return null
+}
+
 // ── LICENSE ──────────────────────────────────────────────────────────────────
 section('LICENSE')
 {
@@ -180,18 +268,51 @@ section('In-app attribution')
     // Checking for the bare identifier is not enough: deleting the <Anchor>
     // while leaving the import behind passes a substring test, and eslint only
     // warns on the unused import. Require it in an href position.
-    if (!/href=\{\s*LICENCES_URL\s*\}/.test(text)) {
+    const HREF = /href=\{\s*LICENCES_URL\s*\}/
+    const BREAKPOINT_PROP = /\b(?:visibleFrom|hiddenFrom)=/
+    const element = findElementWithHref(text, HREF)
+
+    if (!HREF.test(text)) {
       fail(
         'AppFooter has no `href={LICENCES_URL}` — the attribution link is the only\n' +
           '         route by which the notices reach a visitor. Restore it.',
       )
-    } else if (/visibleFrom=/.test(text.slice(text.indexOf('href={LICENCES_URL}') - 400, text.indexOf('href={LICENCES_URL}') + 200))) {
+    } else if (!element) {
+      // The href is in the file but no opening tag could be resolved around it.
+      // Reporting that plainly beats guessing: the previous version of this
+      // check treated "cannot tell" as "fine".
+      fail('found `href={LICENCES_URL}` but could not resolve the element carrying it')
+    } else if (element.children === null) {
+      fail(`the licences <${element.tag}> is never closed — cannot verify its label`)
+    } else if (BREAKPOINT_PROP.test(element.props)) {
       // A mobile visitor receives the same bundle as a desktop one, so the
       // notices have to be reachable at every breakpoint. Hiding the link
       // would leave every other check in this file passing.
-      fail('the licences link appears to be breakpoint-hidden — it must be visible on mobile too')
+      fail(
+        `the licences <${element.tag}> is breakpoint-hidden — a mobile visitor gets the\n` +
+          '         same bundle, so the notices must be reachable at every breakpoint',
+      )
     } else {
-      ok('footer links the third-party licences, at all breakpoints')
+      // The label is allowed to *change* across breakpoints — a long label above
+      // `sm` and a short one below is the pattern in AppFooter — but every
+      // `visibleFrom="x"` needs a complementary `hiddenFrom="x"` sibling, or the
+      // link renders with no text below x. The old ±400/200 character window
+      // could not express this: it saw the two spans' props as one undifferentiated
+      // blob of text near the href and could only ask whether `visibleFrom`
+      // appeared at all.
+      const children = element.children.replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
+      const shownAbove = [...children.matchAll(/visibleFrom="([^"]+)"/g)].map((m) => m[1])
+      const shownBelow = [...children.matchAll(/hiddenFrom="([^"]+)"/g)].map((m) => m[1])
+      const uncovered = [...new Set(shownAbove.filter((bp) => !shownBelow.includes(bp)))]
+
+      if (uncovered.length) {
+        fail(
+          `the licences label only renders above the "${uncovered.join('", "')}" breakpoint —\n` +
+            '         add a complementary `hiddenFrom` sibling so it has text below it too',
+        )
+      } else {
+        ok('footer links the third-party licences, at all breakpoints')
+      }
     }
   }
 }
@@ -212,14 +333,53 @@ section('Lockfile')
 
 // ── Inventory freshness ──────────────────────────────────────────────────────
 section('Third-party inventory')
-try {
-  execFileSync('node', [join(APP, 'scripts', 'generate-third-party-notices.mjs'), '--check'], {
-    cwd: APP,
-    stdio: 'inherit',
-  })
-  ok('inventory matches the installed production tree')
-} catch {
-  fail('inventory is stale — run `pnpm licences` and commit')
+{
+  // The generator resolves the real production tree through `pnpm licenses
+  // list`, so with no dependency tree it has nothing to compare the committed
+  // inventory against. That is the opposite problem from a stale inventory and
+  // takes the opposite instruction: `pnpm install`, not `pnpm licences`.
+  //
+  // This block used to be a bare `try/catch {}` that reported every failure as
+  // "inventory is stale — run `pnpm licences` and commit". The generator's own
+  // stderr already said "Run `pnpm install` first", so a fresh clone printed
+  // both, and the wrong one printed last and carried the FAIL marker. Same
+  // mistake as the one documented on runPnpm in
+  // generate-third-party-notices.mjs: one fixed sentence standing in for a
+  // diagnosis the child had already made.
+  //
+  // Two guards, because they catch different things. The precondition below
+  // avoids spawning at all in the common fresh-clone case; the exit code
+  // handles a tree that exists but is unusable, which no precondition here can
+  // detect without duplicating pnpm's own resolution.
+  const EXIT_STALE = 1
+  const EXIT_NOT_INSTALLED = 2
+  const INSTALL_FIRST =
+    'dependencies are not installed — run `pnpm install`, then re-run this check'
+
+  if (!existsSync(join(APP, 'node_modules'))) {
+    fail(INSTALL_FIRST)
+  } else {
+    try {
+      execFileSync('node', [join(APP, 'scripts', 'generate-third-party-notices.mjs'), '--check'], {
+        cwd: APP,
+        stdio: 'inherit',
+      })
+      ok('inventory matches the installed production tree')
+    } catch (error) {
+      // `status` is the child's exit code, and is undefined when the child
+      // never ran — a missing node binary or a spawn refusal, which is neither
+      // a stale inventory nor a missing install. Taking the error rather than
+      // discarding it is the whole point of this block.
+      if (error.status === EXIT_NOT_INSTALLED) fail(INSTALL_FIRST)
+      else if (error.status === EXIT_STALE)
+        fail('inventory is stale — run `pnpm licences` and commit')
+      else
+        fail(
+          `could not run the inventory generator (${error.status ?? error.code ?? 'no exit code'}) —\n` +
+            `         this is neither a stale inventory nor a missing install: ${error.message}`,
+        )
+    }
+  }
 }
 
 // ── Build output ─────────────────────────────────────────────────────────────

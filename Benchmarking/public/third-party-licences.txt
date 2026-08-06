@@ -5,8 +5,8 @@ This application bundles the open-source packages listed below.
 Each is reproduced with its full licence text, as those licences
 require when the software is distributed.
 
-CoreSpan AI's own source is licensed Apache-2.0 and is not covered
-by the notices below. See the LICENSE file in the repository.
+Corespan Systems, Inc's own source is licensed Apache-2.0 and is not
+covered by the notices below. See the LICENSE file in the repository.
 
 Packages: 54
 

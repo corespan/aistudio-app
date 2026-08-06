@@ -143,7 +143,7 @@ See [`Benchmarking/CLAUDE.md`](Benchmarking/CLAUDE.md) for architecture details.
 
 ## Licensing
 
-CoreSpan AI's source in this repository is licensed **Apache-2.0** — see
+Corespan Systems, Inc's source in this repository is licensed **Apache-2.0** — see
 [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
 
 Apache-2.0 Section 6 grants no trademark rights. "CoreSpan" and the CoreSpan
@@ -166,10 +166,23 @@ OFL-1.1 all require the copyright notice to travel with a distributed copy.
 | --- | --- |
 | Inventory of bundled packages | [`Benchmarking/THIRD-PARTY-NOTICES.md`](Benchmarking/THIRD-PARTY-NOTICES.md) |
 | Full licence texts, served with the app | `/aistudio/third-party-licences.txt`, linked from the app footer |
-| Response to the licence review | [`docs/LICENCE-REVIEW-RESPONSE.md`](docs/LICENCE-REVIEW-RESPONSE.md) |
 
 The production tree is entirely permissive — no GPL, LGPL or MPL. The
 obligations are attribution only.
+
+### Disclosed: an internal endpoint reached this repository
+
+`Benchmarking/.env.example` once carried a live internal host as the documented
+default for `VITE_API_URL`. It now points at `http://localhost:8002`.
+
+That edit changed the current file and nothing else. The original value is still
+in this repository's git history, and in every clone and fork already taken from
+it; rewriting history would not recall those copies. So this is recorded as
+**disclosed**, not fixed — the endpoint should be treated as public, and the
+remedy is access control on the host itself rather than a further repository
+edit. The value is deliberately not repeated here: it is already recoverable by
+anyone who needs it for an audit, and restating it in the front-page README
+would widen the exposure rather than document it.
 
 ### Verifying it yourself
 
