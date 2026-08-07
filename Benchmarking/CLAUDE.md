@@ -85,3 +85,38 @@ import it — never instantiate a second client.
 
 `VITE_API_URL` is **required** — the dev server throws on startup without it.
 Copy `.env.example` to `.env` and point it at your backend.
+
+---
+
+## Deployment Routing
+
+The app is served under `/aistudio/` (`base` in `vite.config.ts`, `basename` in
+`App.tsx`), but Vite emits to the deploy root — so `vercel.json` maps the prefixed
+request back onto the flat output. Rewrites are matched in order, first match wins:
+
+| Rule | Purpose |
+| ---- | ------- |
+| `/aistudio` and `/aistudio/` | serve the SPA shell |
+| `/aistudio/assets/:path*` | hashed bundles, straight through |
+| `/aistudio/:file(<extensions>)` | files copied from `public/` |
+| `/aistudio/:path*` | everything else → `index.html` (SPA routes) |
+
+The third rule lists file extensions explicitly. It previously read
+`:file([^/]+\.[^/]+)` — "any single segment containing a dot" — which is not the
+same question as "is this a file". Any future route with a dot in it
+(`/aistudio/model.compare`, `/aistudio/run-v1.2`, `/aistudio/v2.beta`) matched it,
+got treated as a static file, and 404'd instead of reaching the SPA. The failure
+would appear long after the rule was written and would not look like a routing
+problem.
+
+`vercel.json` must be strict JSON, so that reasoning lives here rather than inline.
+
+Two consequences worth knowing before editing it:
+
+- **Adding a new file type to `public/` means adding its extension here**, or the
+  request falls through to the SPA catch-all and returns `index.html` with a 200 —
+  a broken asset that does not look like a 404.
+- **`[^/]+` matches one segment only.** Assets in a `public/` subdirectory
+  (`public/img/logo.png`) are not covered by this rule and would hit the catch-all.
+  That was true of the previous rule too; it is a known gap, not a regression. Use
+  `assets/` or the flat `public/` root, or widen the pattern deliberately.

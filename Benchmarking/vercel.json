@@ -10,7 +10,10 @@
     { "source": "/aistudio", "destination": "/index.html" },
     { "source": "/aistudio/", "destination": "/index.html" },
     { "source": "/aistudio/assets/:path*", "destination": "/assets/:path*" },
-    { "source": "/aistudio/:file([^/]+\\.[^/]+)", "destination": "/:file" },
+    {
+      "source": "/aistudio/:file([^/]+\\.(?:png|jpg|jpeg|gif|svg|webp|avif|ico|woff|woff2|ttf|otf|txt|json|xml|csv|webmanifest|pdf|map))",
+      "destination": "/:file"
+    },
     { "source": "/aistudio/:path*", "destination": "/index.html" }
   ]
 }

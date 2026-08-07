@@ -4,7 +4,6 @@ import type { ColumnDef } from '@tanstack/react-table'
 import type { JupyterInstance } from '../types'
 import { useJupyterInstances } from '../data/queries/useJupyterInstances'
 import { JUPYTER_INSTANCE_STATE_COLORS } from '../constants'
-import { maskIp } from '../lib/maskIp'
 import { DeleteJupyterInstanceButton } from './DeleteJupyterInstanceButton'
 
 // Show only month, day, and time — full timestamp stays available on hover.
@@ -24,19 +23,6 @@ const EMPTY_ROWS: JupyterInstance[] = []
 
 const columns: ColumnDef<JupyterInstance>[] = [
   { accessorKey: 'taskId', header: 'Task ID' },
-  // {
-  //   accessorKey: 'nodeIp',
-  //   header: 'Node IP',
-  //   cell: ({ getValue }) => {
-  //     const ip = getValue<string>()
-  //     if (!ip) return '—'
-  //     return (
-  //       <Tooltip label={ip} withArrow>
-  //         <span>{maskIp(ip)}</span>
-  //       </Tooltip>
-  //     )
-  //   },
-  // },
   {
     accessorKey: 'state',
     header: 'State',
