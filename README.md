@@ -142,6 +142,17 @@ See [`Benchmarking/CLAUDE.md`](Benchmarking/CLAUDE.md) for architecture details.
 
 ---
 
+## Contributing
+
+We welcome contributions! Please see our [**Contribution Guidelines**](CONTRIBUTING.md)
+for details on:
+- Setting up your local development environment
+- Pull request workflow and coding standards
+- Areas that can be improved (UI/UX, visualizations, test coverage)
+- How to add, export, and import benchmark runs using `aistudio-cli` and `aistudio-server`
+
+---
+
 ## Licensing
 
 Corespan Systems, Inc's source in this repository is licensed **Apache-2.0** — see
