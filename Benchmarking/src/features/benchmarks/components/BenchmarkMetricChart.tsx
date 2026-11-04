@@ -16,6 +16,7 @@ import {
 } from '@mantine/core'
 import { IconSearch } from '@tabler/icons-react'
 import { CoreChart, CoreIcon } from '@/shared/ui'
+import { useCoreMindField } from '@/shared/coremind/fieldRegistry'
 import type { ECharts, EChartsOption } from 'echarts'
 import type { BenchmarkRun } from '../types'
 import { useBenchmarks } from '../data/queries/useBenchmarks'
@@ -137,6 +138,18 @@ export const BenchmarkMetricChart = () => {
   // filter over the GPU list, and the two display toggles.
   const [hiddenGpus, setHiddenGpus] = useState<Set<string>>(new Set())
   const [search, setSearch] = useState('')
+  // Lets CoreMind fill the GPU search box ("search gpu h100").
+  const gpuSearchRef = useRef<HTMLInputElement>(null)
+  useCoreMindField(
+    {
+      name: 'gpuSearch',
+      label: 'Search GPU',
+      aliases: ['gpu search', 'search'],
+      value: search,
+      onChange: setSearch,
+    },
+    gpuSearchRef,
+  )
   const [showLabels, setShowLabels] = useState(true)
   // Escape hatch into the ECharts instance, so "Reset zoom" can dispatchAction
   // without CoreChart needing to expose any zoom-specific API of its own.
@@ -510,6 +523,7 @@ export const BenchmarkMetricChart = () => {
               </Box>
 
               <TextInput
+                ref={gpuSearchRef}
                 placeholder="Search GPU"
                 size="sm"
                 leftSection={<CoreIcon icon={<IconSearch />} size={13} />}

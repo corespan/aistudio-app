@@ -62,6 +62,18 @@ const TEXT_OUT = join(ROOT, 'public', 'third-party-licences.txt')
 const CHECK = process.argv.includes('--check')
 
 /**
+ * Distinct exit codes, because "the inventory drifted" and "there is no
+ * dependency tree to compare against" need opposite instructions — `pnpm
+ * licences` versus `pnpm install` — and a caller that sees only non-zero has to
+ * guess which. check-compliance.mjs reported every failure here as stale,
+ * printing "run `pnpm licences` and commit" at somebody who had not installed
+ * yet. Anything reading these codes still treats both as failure, so CI is
+ * unaffected; only the advice changes.
+ */
+const EXIT_STALE = 1
+const EXIT_NOT_INSTALLED = 2
+
+/**
  * Normalise line endings and trailing whitespace.
  *
  * Some upstream packages ship licence files with CRLF — nine of the 54 here do.
@@ -137,7 +149,7 @@ function readProductionPackages() {
     console.error('ERROR: `pnpm licenses list --prod --json` failed.')
     console.error('Run `pnpm install` first.')
     console.error(String(error.stderr || error.message).trim())
-    process.exit(1)
+    process.exit(EXIT_NOT_INSTALLED)
   }
 
   const byLicence = JSON.parse(raw)
@@ -247,8 +259,8 @@ function renderText(packages) {
   lines.push('Each is reproduced with its full licence text, as those licences')
   lines.push('require when the software is distributed.')
   lines.push('')
-  lines.push("CoreSpan AI's own source is licensed Apache-2.0 and is not covered")
-  lines.push('by the notices below. See the LICENSE file in the repository.')
+  lines.push("Corespan Systems, Inc's own source is licensed Apache-2.0 and is not")
+  lines.push('covered by the notices below. See the LICENSE file in the repository.')
   lines.push('')
   lines.push(`Packages: ${packages.length}`)
   lines.push('')
@@ -420,7 +432,7 @@ function main() {
   const packages = readProductionPackages()
   if (!packages.length) {
     console.error('ERROR: no production packages resolved. Run `pnpm install` first.')
-    process.exit(1)
+    process.exit(EXIT_NOT_INSTALLED)
   }
 
   const markdown = renderMarkdown(packages)
@@ -442,7 +454,7 @@ function main() {
         stale = true
       }
     }
-    if (stale) process.exit(1)
+    if (stale) process.exit(EXIT_STALE)
     console.log(`Third-party notices are up to date (${packages.length} packages).`)
     return
   }

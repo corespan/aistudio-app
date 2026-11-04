@@ -188,11 +188,33 @@ export type BenchmarkFiltersStore = {
 }
 
 // store/useStartBenchmarkModalStore
+/**
+ * What the Start Benchmark wizard exposes to CoreMind, the chat assistant, so
+ * it can fill the wizard through the form itself — every input then shows
+ * exactly the value the chat set. Each method returns the chat reply.
+ */
+export type StartBenchmarkWizardBridge = {
+  isOpen: boolean
+  /** Current step index (0 = Select Node … 3 = Review & Confirm). */
+  step: number
+  /**
+   * Fill a field by name — "node ip", "model", or a model configuration key —
+   * moving to that field's step. Returns null when the wizard has no such field.
+   */
+  fill: (field: string, value: string) => Promise<string | null>
+  /** Go to the next step if the current one is valid. Never starts the run. */
+  next: () => Promise<string>
+  back: () => string
+}
+
 export type StartBenchmarkModalStore = {
   /** Whether the Start Benchmark wizard modal is open. */
   isOpen: boolean
   open: () => void
   close: () => void
+  /** Set by the mounted wizard; null when it isn't on the page. */
+  wizard: StartBenchmarkWizardBridge | null
+  registerWizard: (wizard: StartBenchmarkWizardBridge | null) => void
 }
 
 // components/BenchmarksHeader

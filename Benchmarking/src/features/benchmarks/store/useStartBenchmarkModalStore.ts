@@ -9,4 +9,6 @@ export const useStartBenchmarkModalStore = create<StartBenchmarkModalStore>((set
   isOpen: false,
   open: () => set({ isOpen: true }),
   close: () => set({ isOpen: false }),
+  wizard: null,
+  registerWizard: (wizard) => set({ wizard }),
 }))

@@ -1,7 +1,7 @@
 AI Studio (aistudio-app)
-Copyright 2026 CoreSpan AI
+Copyright 2026 Corespan Systems, Inc
 
-This product includes software developed at CoreSpan AI.
+This product includes software developed at Corespan Systems, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use
 this file except in compliance with the License. You may obtain a copy of the
@@ -50,15 +50,16 @@ marks. Those two are separated explicitly here:
     Benchmarking/public/corespan.png
     Benchmarking/public/favicon.svg
 
-Both are CoreSpan AI's own work and are excluded from the Apache-2.0 grant. They
+Both are Corespan Systems, Inc's own work and are excluded from the Apache-2.0
+grant. They
 are included so the application renders as intended; no licence to reproduce,
 modify or redistribute them apart from the application is granted. Replace them
 when redistributing a modified version — which is the outcome Section 6 already
 implies, stated here so it does not depend on inference.
 
 Every other asset under Benchmarking/public/ — the diagrams and illustrations —
-is CoreSpan AI's own work and is covered by the Apache-2.0 grant along with the
-source.
+is Corespan Systems, Inc's own work and is covered by the Apache-2.0 grant along
+with the source.
 
 "Apache", "Apache ECharts" and the Apache feather logo are trademarks of The
 Apache Software Foundation.

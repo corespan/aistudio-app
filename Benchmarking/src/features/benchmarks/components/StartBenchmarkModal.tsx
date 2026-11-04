@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormProvider, useForm, useWatch } from 'react-hook-form'
 import {
@@ -34,6 +34,9 @@ import { extractConfigFields, mergeConfigValues } from '../data/selectors/extrac
 import { readTaskId } from '../data/selectors/toTaskId'
 import { startBenchmarkSchema } from '../startBenchmark.schema'
 import { useRunStreamsStore } from '../store/useRunStreamsStore'
+import { useStartBenchmarkModalStore } from '../store/useStartBenchmarkModalStore'
+import { flattenOptions, listOptions, looksLikeHost, matchOption } from '@/shared/lib/matchOption'
+import { useCoreMindField } from '@/shared/coremind/fieldRegistry'
 import { ModelConfigFields } from './ModelConfigFields'
 import type { StartBenchmarkFormValues, StartBenchmarkModalProps, ReviewRowProps } from '../types'
 import {
@@ -118,32 +121,142 @@ export const StartBenchmarkModal = ({ opened, onClose }: StartBenchmarkModalProp
 
   // Users can move between steps freely — only the first three steps require a
   // valid selection (per the shared Zod schema) before advancing.
-  const handleNext = async () => {
-    setValidationError(null)
+  // Advances when the current step is valid; otherwise returns why not.
+  const tryNext = async (): Promise<string | null> => {
+    if (active === 0 && !(await form.trigger('nodeIp'))) {
+      return form.getFieldState('nodeIp').error?.message ?? 'Node IP is required'
+    }
 
-    if (active === 0 && !(await form.trigger('nodeIp'))) return
-
-    if (active === 1 && !(await form.trigger('model'))) return
+    if (active === 1 && !(await form.trigger('model'))) {
+      return form.getFieldState('model').error?.message ?? 'Model is required'
+    }
 
     if (active === 2) {
-      if (!modelConfig.isSuccess) {
-        setValidationError('Configuration is still loading. Please wait.')
-        return
-      }
-      if (configFieldCount === 0) {
-        setValidationError(CONFIG_UNAVAILABLE_MESSAGE)
-        return
-      }
-      if (!isConfigComplete) {
-        setValidationError(CONFIG_INCOMPLETE_MESSAGE)
-        return
+      const configError = !modelConfig.isSuccess
+        ? 'Configuration is still loading. Please wait.'
+        : configFieldCount === 0
+          ? CONFIG_UNAVAILABLE_MESSAGE
+          : !isConfigComplete
+            ? CONFIG_INCOMPLETE_MESSAGE
+            : null
+      if (configError) {
+        setValidationError(configError)
+        return configError
       }
     }
 
     setActive((step) => Math.min(step + 1, START_BENCHMARK_STEPS.length - 1))
+    return null
+  }
+
+  const handleNext = async () => {
+    setValidationError(null)
+    await tryNext()
   }
 
   const handleBack = () => setActive((step) => Math.max(step - 1, 0))
+
+  // ── CoreMind bridge ───────────────────────────────────────────────────────
+  // Lets the chat fill this wizard step by step ("add node ip 10.0.0.12",
+  // "select model llama", "next") through the form itself, so each input shows
+  // exactly the value that was set. It never submits — starting a run always
+  // needs the user's own click on "Start Benchmark".
+  const registerWizard = useStartBenchmarkModalStore((s) => s.registerWizard)
+  const setFieldOptions = { shouldValidate: true, shouldDirty: true, shouldTouch: true } as const
+  const stepName = (index: number) => `step ${index + 1}, ${START_BENCHMARK_STEPS[index].title}`
+
+  const fillNodeIp = (raw: string) => {
+    const value = raw.trim()
+    setActive(0)
+    if (!value) return 'What is the node IP? For example: "add node ip 10.0.0.12".'
+    if (!looksLikeHost(value)) {
+      return `"${value}" doesn't look like a machine IP or hostname. For example: "add node ip 10.0.0.12".`
+    }
+    form.setValue('nodeIp', value, setFieldOptions)
+    setValidationError(null)
+    return `Node IP set to ${value}. Next: "add model <name>".`
+  }
+
+  const fillModel = (raw: string) => {
+    if (!form.getValues('nodeIp')) {
+      setActive(0)
+      return 'Add the node IP first. For example: "add node ip 10.0.0.12".'
+    }
+    setActive(1)
+    if (models.isPending) return 'The model list is still loading. Try again in a moment.'
+    if (models.isError) return "The model list failed to load, so I can't select a model."
+    const options = flattenOptions(models.data)
+    const wanted = raw.trim()
+    if (!wanted) return `Which model? Available: ${listOptions(options)}.`
+    const result = matchOption(options, wanted)
+    if (result.kind === 'none') {
+      return `No model matches "${wanted}". Available: ${listOptions(options)}.`
+    }
+    if (result.kind === 'ambiguous') {
+      return `Several models match "${wanted}": ${listOptions(result.options)}. Which one?`
+    }
+    form.setValue('model', result.option.value, setFieldOptions)
+    setValidationError(null)
+    return `Model set to ${result.option.label}. Say "next" to load its configuration.`
+  }
+
+  const configKeys = modelConfig.isSuccess ? Object.keys(extractConfigFields(modelConfig.data)) : []
+  const squash = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, '')
+
+  const fillConfig = (key: string, raw: string) => {
+    const value = raw.trim()
+    setActive(2)
+    if (!value) return `What should ${key} be?`
+    form.setValue(`config.${key}`, value, setFieldOptions)
+    setValidationError(null)
+    return `${key} set to ${value}.`
+  }
+
+  const fill = async (field: string, value: string): Promise<string | null> => {
+    const name = squash(field.replace(/\b(?:the|field|box|input|dropdown|value|of)\b/gi, ''))
+    if (/^(?:nodeip(?:address)?|ip(?:address)?|node|machine(?:ip)?|server(?:ip)?)$/.test(name)) {
+      return fillNodeIp(value)
+    }
+    if (/^model(?:name)?$/.test(name)) return fillModel(value)
+    const key = configKeys.find((k) => squash(k) === name)
+    return key ? fillConfig(key, value) : null
+  }
+
+  const next = async () => {
+    if (active >= START_BENCHMARK_STEPS.length - 1) {
+      return 'This is the last step. Review everything, then click "Start Benchmark" to run it.'
+    }
+    setValidationError(null)
+    const error = await tryNext()
+    return error ?? `Moved to ${stepName(active + 1)}.`
+  }
+
+  const back = () => {
+    if (active === 0) return 'Already on the first step.'
+    setActive(active - 1)
+    return `Back to ${stepName(active - 1)}.`
+  }
+
+  // The Node IP box is a plain Autocomplete (not a CoreTextInput), so it
+  // signs itself onto CoreMind's field list here, while its step is showing.
+  const nodeIpRef = useRef<HTMLInputElement>(null)
+  useCoreMindField(
+    {
+      name: 'nodeIp',
+      label: 'Node IP',
+      aliases: ['ip', 'ip address', 'node', 'machine', 'machine ip', 'server'],
+      enabled: opened && active === 0,
+      value: nodeIp,
+      onChange: (value) => form.setValue('nodeIp', value, setFieldOptions),
+    },
+    nodeIpRef,
+  )
+
+  // Re-registered every render so CoreMind always sees the current step and data.
+  useEffect(() => {
+    registerWizard({ isOpen: opened, step: active, fill, next, back })
+  })
+  useEffect(() => () => registerWizard(null), [registerWizard])
 
   // Fires the actual /benchmarks/start call from the Review & Confirm step,
   // sending the user's edited config; on success the wizard advances to the
@@ -275,6 +388,7 @@ export const StartBenchmarkModal = ({ opened, onClose }: StartBenchmarkModalProp
                 {active === 0 && (
                   <Paper withBorder radius="md" p="lg" shadow="xs">
                     <Autocomplete
+                      ref={nodeIpRef}
                       label="Node IP"
                       placeholder="Type or paste a machine IP (e.g. 10.0.0.12)"
                       description={
@@ -307,6 +421,7 @@ export const StartBenchmarkModal = ({ opened, onClose }: StartBenchmarkModalProp
                     <CoreSelect
                       name="model"
                       label="Model"
+                      coreMindAliases={['model name', 'llm']}
                       leftSection={<CoreIcon icon={<IconCpu stroke={1.6} />} size={16} />}
                       placeholder={
                         models.isPending

@@ -54,6 +54,11 @@ export default defineConfig(({ mode, command }) => {
         },
       },
     },
+    // Workers as ES modules: CoreMind's local AI worker (WebLLM) is code-split,
+    // which Vite's default IIFE worker format can't bundle.
+    worker: {
+      format: 'es' as const,
+    },
     resolve: {
       alias: {
         '@': resolve(__dirname, 'src'),

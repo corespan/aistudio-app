@@ -14,6 +14,7 @@ import {
   Tooltip,
 } from '@mantine/core'
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react'
+import { useMediaQuery } from '@mantine/hooks'
 import { useState } from 'react'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router'
 import { AppFooter } from '@/app/layout/AppFooter'
@@ -24,6 +25,9 @@ import { JupyterUrlsPanel } from '@/features/benchmarks/components/JupyterUrlsPa
 import { DbHealthIndicator } from '@/features/benchmarks/components/DbHealthIndicator'
 import { AboutUs } from '@/features/about/AboutUs'
 import { BlogsPage } from '@/features/blogs/BlogsPage'
+import { CoreMindChat, CoreMindToggleButton } from '@/features/coremind/components/CoreMindChat'
+import { CHAT_PANEL_WIDTH } from '@/features/coremind/constants'
+import { useCoreMindStore } from '@/features/coremind/store/useCoreMindStore'
 import {
   HEADER_HEIGHT,
   NAV_GROUPS,
@@ -50,6 +54,11 @@ export const AppLayout = () => {
       : location.pathname.startsWith(pathForKey(child.key)),
   )?.key ?? 'benchmarks') as SectionKey
   const [isNavbarCollapsed, setIsNavbarCollapsed] = useState(false)
+  // CoreMind docks on the right like a browser side panel: on wide screens the
+  // page shrinks to make room; on phones the panel covers it instead.
+  const isCoreMindOpen = useCoreMindStore((s) => s.isOpen)
+  const isWide = useMediaQuery('(min-width: 48em)')
+  const coreMindInset = isCoreMindOpen && isWide ? CHAT_PANEL_WIDTH : 0
 
   const handleNavBarClose = () => {
     setIsNavbarCollapsed(!isNavbarCollapsed)
@@ -183,6 +192,7 @@ export const AppLayout = () => {
 
         <AppShell.Main
           pl={isNavbarCollapsed ? NAVBAR_COLLAPSED_WIDTH : NAVBAR_WIDTH}
+          pr={coreMindInset}
           h="calc(100vh - var(--app-shell-footer-height, 0px))"
           style={{ transition: 'padding 300ms ease', display: 'flex', flexDirection: 'column' }}
         >
@@ -190,6 +200,8 @@ export const AppLayout = () => {
               card below sits under this same heading on every page, so it
               never needs (or risks drifting out of sync with) its own title. */}
           <Flex
+            // Lets CoreMind target "the header" by name (see coremind/lib/dom.ts).
+            data-coremind-region="header"
             h={HEADER_HEIGHT}
             pl="lg"
             pr={16}
@@ -202,7 +214,10 @@ export const AppLayout = () => {
               {pageTitle}
             </Text>
 
-            <DbHealthIndicator />
+            <Flex align="center" gap="xs">
+              <DbHealthIndicator />
+              <CoreMindToggleButton />
+            </Flex>
           </Flex>
 
           <Flex flex={1} mih={0} style={{ overflow: 'hidden' }}>
@@ -249,6 +264,8 @@ export const AppLayout = () => {
           <AppFooter />
         </AppShell.Footer>
       </AppShell>
+
+      <CoreMindChat />
     </>
   )
 }

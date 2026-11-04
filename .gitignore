@@ -21,3 +21,6 @@ Thumbs.db
 
 # Deploy
 .vercel
+
+# Local Claude Code scratch output
+Claude outputs/

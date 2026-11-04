@@ -8,3 +8,10 @@ body,
   height: 100%;
   margin: 0;
 }
+
+/* CoreMind: caret shown while an agent reply is still streaming. */
+@keyframes coremind-caret {
+  50% {
+    opacity: 0;
+  }
+}

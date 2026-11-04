@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react'
-import { SimpleGrid, Stack, Text, TextInput } from '@mantine/core'
-import { Controller, useFormContext } from 'react-hook-form'
+import { SimpleGrid, Stack, Text } from '@mantine/core'
+import { useFormContext } from 'react-hook-form'
+import { CoreTextInput } from '@/shared/ui'
 import { extractConfigFields, formatConfigValue } from '../data/selectors/extractConfigFields'
 import type { StartBenchmarkFormValues, ModelConfigFieldsProps } from '../types'
 
@@ -11,7 +12,7 @@ import type { StartBenchmarkFormValues, ModelConfigFieldsProps } from '../types'
  * schema instead of being tracked locally.
  */
 export const ModelConfigFields = ({ config }: ModelConfigFieldsProps) => {
-  const { control, setValue } = useFormContext<StartBenchmarkFormValues>()
+  const { setValue } = useFormContext<StartBenchmarkFormValues>()
 
   const fields = useMemo(() => Object.entries(extractConfigFields(config)), [config])
 
@@ -38,14 +39,8 @@ export const ModelConfigFields = ({ config }: ModelConfigFieldsProps) => {
       </Text>
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
         {fields.map(([key]) => (
-          <Controller
-            key={key}
-            name={`config.${key}`}
-            control={control}
-            render={({ field, fieldState }) => (
-              <TextInput {...field} value={field.value ?? ''} label={key} error={fieldState.error?.message} />
-            )}
-          />
+          // CoreTextInput also puts each field on CoreMind's list ("set max tokens to 256").
+          <CoreTextInput key={key} name={`config.${key}`} label={key} />
         ))}
       </SimpleGrid>
     </Stack>
