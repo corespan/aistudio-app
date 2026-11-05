@@ -42,10 +42,26 @@ import { BLOG_POSTS, CATEGORY_ICON_BY_LABEL, CATEGORY_STYLES } from '../constant
 import { formatDate, gradientBackground } from '../utils'
 import { CoreIcon } from '@/shared/ui'
 import { AgentArchitectureDiagram } from './AgentArchitectureDiagram'
+import {
+  GatewayCheckpointsDiagram,
+  GatewayRequestFlowDiagram,
+  IsolationLadderDiagram,
+  ProposeApproveRunDiagram,
+  ReleaseGateDiagram,
+  SharedAgentEngineDiagram,
+  TopologyViewsDiagram,
+} from './SeriesDiagrams'
 
 /** Named diagrams a section can reference by key instead of a raster image. */
 const DIAGRAM_COMPONENTS: Record<string, ComponentType<{ accent: string }>> = {
   'agent-architecture': AgentArchitectureDiagram,
+  'gateway-checkpoints': GatewayCheckpointsDiagram,
+  'gateway-request-flow': GatewayRequestFlowDiagram,
+  'isolation-ladder': IsolationLadderDiagram,
+  'shared-agent-engine': SharedAgentEngineDiagram,
+  'release-gate': ReleaseGateDiagram,
+  'propose-approve-run': ProposeApproveRunDiagram,
+  'topology-views': TopologyViewsDiagram,
 }
 
 type BlogArticleProps = {
